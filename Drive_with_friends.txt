@@ -1,0 +1,48 @@
+Drive_with_friends
+
+Drive with friends
+
+Objetivo geral do sistema é a criação e receção de alertas de trânsito
+	ou aglomerados de veículos numa área.
+
+Sistema de "amizades" e "grupos", com troca de mesagens com avisos de transito, condiçoes meteorologicas, entre outros
+
+Definir areas sobre as quais pretende receber alertas.
+
+o sistema deverá estar em constante atualização, recebendo e enviando dados sobre e para os condutores.
+
+Não se pretende uma substituição da aplicação WAze, uma vez que se podera
+inserir manualmente a localização(coordenadas geo) do utilizador
+
+Condutor
+	id, nome, localização atual, amigos, grupos, areasAlertas,
+	raioAreaCircundante
+	(receber msg da comunidade, desde que o emissor se encontre a <1km)
+	(emitir notificaçoes para pessoas/grupos)
+	(emitir notificaçoes para a comunidade de incidentes na estrade)
+	(receber notificaçoes do sistema)
+
+
+
+	Condutor 
+		id, nome, localizaçãoAtual
+		password
+
+		o Definir a sua localização atual
+		o Definir pessoas/grupos para poder receber/enviar mensagens
+		o Definir áreas específicas para receber alertas sobre, por exemplo, estado do trânsito
+		o Ser notificado sobre situações existentes na estrada na área circundante (o utilizador
+			pode definir o raio da sua área circundante)
+		o Receber mensagens da comunidade, desde que o emissor se encontre a menos de 1km
+			de distância
+		o Emitir notificações para pessoas/grupos previamente definidos
+		o Emitir notificações para a comunidade sobre incidentes na estrada
+		o Receber notificações do sistema sobre alertas da proteção civil
+
+
+Servidor
+	varias ligaçoes de varios condutores
+	guardar registos de informaçoes relevantes
+	As notificações de alerta periódica devem ser efetuadas via 
+		Multicast (quando se incide num grupo de condutores),
+		Broadcast (quando o evento é para toda a população).

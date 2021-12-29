@@ -3,16 +3,26 @@ import java.util.List;
 
 public class Driver {
     private int id;
+    private String username;
     private String name;
     private String password;
     private Location currentLocation;
     private List<Driver> friends;
     private List<Group> groups;
 
-    public Driver(String name, String password){
+    public Driver(String username,String name, String password){
+        this.username = username;
         this.id = id;
         this.name = name;
         this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public int getId() {
@@ -61,5 +71,15 @@ public class Driver {
 
     public void setGroups(List<Group> groups) {
         this.groups = groups;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof Driver){
+            Driver driver = (Driver) o;
+            if (this.username.equals(driver.username)){ return true;}
+            return false;
+        }
+        return false;
     }
 }

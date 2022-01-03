@@ -1,3 +1,5 @@
+package others;
+
 public class Location {
     private double longitude;
     private double latitude;

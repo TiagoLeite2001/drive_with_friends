@@ -20,7 +20,7 @@ public class Login {
         cards.add(card1, BUTTONPANEL);
         cards.add(card2, TEXTPANEL);
 
-        cards.setSize(1000,100);
+        cards.setSize(1000,100);    
         cards.setVisible(true);
 
 

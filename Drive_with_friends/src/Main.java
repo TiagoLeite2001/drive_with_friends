@@ -1,3 +1,5 @@
+import others.Location;
+
 public class Main {
     public static void main(String[] args) {
         Location casa = new Location(41.321151, -8.228299);

@@ -4,7 +4,6 @@ import others.Location;
 
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 
 public class CentralNode {
     private static ArrayList<Driver> driversList = new ArrayList<>();

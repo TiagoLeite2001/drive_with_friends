@@ -233,9 +233,9 @@ public class Driver {
     }
 
     public static void init() {
-        jFrame.setResizable(false);
+        //jFrame.setResizable(false);
 
-        jFrame.setSize(500, 500);
+        //jFrame.setSize(800, 500);
         jFrame.setDefaultCloseOperation(jFrame.EXIT_ON_CLOSE);
 
         JLabel title = new JLabel("Welcome");
@@ -419,48 +419,96 @@ public class Driver {
 
             }
         });
-        jFrame.setPreferredSize(new Dimension(500, 500));
+        jFrame.setPreferredSize(new Dimension(800, 500));
         jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        jFrame.setResizable(false);
+        //jFrame.setResizable(false);
         jFrame.pack();
         jFrame.setVisible(true);
         jFrame.setLocationRelativeTo(null);
     }
 
     private static void userLoggedIn(Driver driver) {
-        //conectar o utilizador
+        //conectar o utilizador (tcp)
         try {
             Socket socket = new Socket("localhost", 1234);
             driver.connet(socket);
         } catch (IOException e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(jFrame, "Erro a connectar ao servidor!");
+            init();
         }
 
-        JToolBar leftBar = new JToolBar();
+        JToolBar topBar = new JToolBar();
 
         JButton bLocation = new JButton("Minha Localização");
+        topBar.add(bLocation);
+        JPanel pLocation = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+
         bLocation.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                JLabel currentLocation = new JLabel();
+                if(driver.getCurrentLocation() != null){
+                    currentLocation.setText("A sua localização atual é: " + driver.getCurrentLocation().toString());
+                }
+                else{
+                    currentLocation.setText("A sua localização atual está por definir");
+                }
+                JLabel newLocation = new JLabel("Nova localização: ");
+                JTextField latitude = new JTextField("Latitude");
+                JTextField longitude = new JTextField("Longitude");
 
+                JButton changeLocation = new JButton("Alterar localização");
+                changeLocation.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        double latit = 0;
+                        double longit = 0;
+                        try{
+                            latit = Double.parseDouble(latitude.getText());
+                            longit = Double.parseDouble(longitude.getText());
+                            driver.setCurrentLocation(latit, longit);
+                            JOptionPane.showMessageDialog(jFrame, "Localização alterada com sucesso!");
+                            currentLocation.setText("A sua localização atual é: " + driver.getCurrentLocation().toString());
+                            latitude.setText("Latitude");
+                            longitude.setText("Longitude");
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(jFrame, "Latitude e/ou longitude errados!");
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+                pLocation.add(currentLocation);
+                pLocation.add(newLocation);
+                pLocation.add(latitude);
+                pLocation.add(longitude);
+                pLocation.add(changeLocation);
+                jFrame.add(pLocation);
+                jFrame.repaint();
             }
         });
 
         JButton bAreaAlerts = new JButton("Áreas de alertas");
+        topBar.add(bAreaAlerts);
+        JPanel pAreaAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+
         JButton bAlerts = new JButton("Alertas Gerais");
+        topBar.add(bAlerts);
+        JPanel pAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+
         JButton bFriends = new JButton("Amigos");
+        topBar.add(bFriends);
+        JPanel pFriends = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+
         JButton bGroups = new JButton("Grupos");
-        bGroups.setPreferredSize(new Dimension(80, 20));
+        topBar.add(bGroups);
+        JPanel pGroups = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+        //bGroups.setPreferredSize(new Dimension(80, 20));
 
-        leftBar.add(bLocation);
-        leftBar.add(bAreaAlerts);
-        leftBar.add(bAlerts);
-        leftBar.add(bFriends);
-        leftBar.add(bGroups);
-
+        //jFrame.add(topBar);
         jFrame.setLayout(new BorderLayout());
-        jFrame.getContentPane().add(leftBar, BorderLayout.PAGE_START);
-        jFrame.setSize(500, 500);
+        jFrame.getContentPane().add(topBar, BorderLayout.PAGE_START);
+        jFrame.setSize(800, 500);
         jFrame.repaint();
 
     }

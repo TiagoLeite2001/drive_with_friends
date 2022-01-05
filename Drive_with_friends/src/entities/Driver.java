@@ -34,23 +34,30 @@ public class Driver {
     private BufferedWriter bufferedWriter;
     private BufferedReader bufferedReader;
 
-    public Driver(Socket socket, String username,String name, String password){
+    public Driver(String username, String name, String password) {
+        this.username = username;
+        this.id = Id.getID();
+        this.name = name;
+        this.password = password;
+        drivers.add(this);
+
+    }
+
+    public Driver(String username) {
+        this.username = username;
+    }
+
+    public boolean connet(Socket socket) {
         try {
             this.socket = socket;
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            this.username = username;
-            this.id = Id.getID();
-            this.name = name;
-            this.password = password;
-            drivers.add(this);
-        } catch (IOException e){
-            closeEverything(socket, bufferedReader, bufferedWriter);
-        }
-    }
 
-    public Driver(String username){
-        this.username = username;
+            return true;
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     public String getUsername() {
@@ -138,39 +145,39 @@ public class Driver {
         this.radiusLocalArea = radiusLocalArea;
     }
 
-    public boolean login (String password){
+    public boolean login(String password) {
         return this.password.equals(password);
     }
 
-    public void sendMessage(){
+    public void sendMessage() {
         try {
             bufferedWriter.write(username);
             bufferedWriter.newLine();
             bufferedWriter.flush();
 
             Scanner scanner = new Scanner(System.in);
-            while (socket.isConnected()){
+            while (socket.isConnected()) {
                 String messageToSend = scanner.nextLine();
                 bufferedWriter.write(username + ": " + messageToSend);
                 bufferedWriter.newLine();
                 bufferedWriter.flush();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             closeEverything(socket, bufferedReader, bufferedWriter);
         }
     }
 
-    public void listenForMessage(){
+    public void listenForMessage() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 String msgFromGroupChat;
 
-                while(socket.isConnected()){
+                while (socket.isConnected()) {
                     try {
                         msgFromGroupChat = bufferedReader.readLine();
                         System.out.println(msgFromGroupChat);
-                    } catch (IOException e){
+                    } catch (IOException e) {
                         closeEverything(socket, bufferedReader, bufferedWriter);
                     }
                 }
@@ -178,9 +185,9 @@ public class Driver {
         }).start();
     }
 
-    public void closeSocket(){
+    public void closeSocket() {
         try {
-            if (this.socket != null){
+            if (this.socket != null) {
                 this.socket.close();
             }
         } catch (IOException e) {
@@ -188,48 +195,61 @@ public class Driver {
         }
     }
 
-    public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter){
+    public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
         try {
-            if (bufferedReader != null){
+            if (bufferedReader != null) {
                 bufferedReader.close();
             }
-            if (bufferedWriter != null){
+            if (bufferedWriter != null) {
                 bufferedWriter.close();
             }
-            if (socket != null){
+            if (socket != null) {
                 socket.close();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public static Driver getDriver(String username) throws ClassNotFoundException {
+        for(Driver driver : drivers){
+            if (driver.username.equals(username)){
+                return driver;
+            }
+        }
+        throw new ClassNotFoundException();
+    }
+
     @Override
-    public boolean equals(Object o){
-        if(o instanceof Driver){
+    public boolean equals(Object o) {
+        if (o instanceof Driver) {
             Driver driver = (Driver) o;
-            if (this.username.equals(driver.username)){ return true;}
+            if (this.username.equals(driver.username)) {
+                return true;
+            }
             return false;
         }
         return false;
     }
 
-    public static void init(){
+    public static void init() {
+        jFrame.setResizable(false);
+
         jFrame.setSize(500, 500);
         jFrame.setDefaultCloseOperation(jFrame.EXIT_ON_CLOSE);
 
         JLabel title = new JLabel("Welcome");
-        title.setBorder(new EmptyBorder(20,0,10,0));
+        title.setBorder(new EmptyBorder(20, 0, 10, 0));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel panel = new JPanel();
-        panel.setBorder(new EmptyBorder(75, 0, 10 ,0));
+        panel.setBorder(new EmptyBorder(75, 0, 10, 0));
 
         JButton bLogin = new JButton("Login");
-        bLogin.setPreferredSize(new Dimension(200,100));
+        bLogin.setPreferredSize(new Dimension(200, 100));
 
         JButton bSingup = new JButton("Sing Up");
-        bSingup.setPreferredSize(new Dimension(200,100));
+        bSingup.setPreferredSize(new Dimension(200, 100));
 
         panel.add(bLogin);
         panel.add(bSingup);
@@ -244,8 +264,8 @@ public class Driver {
 
                 jFrame.remove(panel);
 
-                JPanel panelLoging = new JPanel(new FlowLayout(FlowLayout.LEFT,150,20));
-                panelLoging.setBorder(new EmptyBorder(75, 0, 10 ,0));
+                JPanel panelLoging = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+                panelLoging.setBorder(new EmptyBorder(75, 0, 10, 0));
 
                 //Labels
                 JLabel lUsername = new JLabel("Username");
@@ -257,7 +277,7 @@ public class Driver {
 
                 //Buttons
                 JButton bLogin = new JButton("Login");
-                bLogin.setPreferredSize(new Dimension(100,20));
+                bLogin.setPreferredSize(new Dimension(100, 20));
 
                 panelLoging.add(lUsername);
                 panelLoging.add(username);
@@ -268,7 +288,7 @@ public class Driver {
                 panelLoging.add(bLogin);
 
                 JButton back = new JButton("Voltar");
-                back.setPreferredSize(new Dimension(80,20));
+                back.setPreferredSize(new Dimension(80, 20));
 
                 panelLoging.add(back);
 
@@ -289,22 +309,24 @@ public class Driver {
                     public void actionPerformed(ActionEvent e) {
                         try {
                             //Verificar se algum campo está em branco
-                            if(username.getText().trim().equals("") || password.getText().trim().equals("") ){
+                            if (username.getText().trim().equals("") || password.getText().trim().equals("")) {
                                 JOptionPane.showMessageDialog(jFrame, "Algum campo está por preencher!");
                                 throw new IOException();
                             }
 
-                            Driver driver = new Driver(username.getText());
+                            Driver driver = getDriver(username.getText());
 
-                            //Procurar um condutor com o mesmo username
-                            if(drivers.contains(driver)){
-                                
+                            if(driver.password.equals(password.getText())){
+                                jFrame.remove(panelLoging);
+                                jFrame.repaint();
+                                userLoggedIn(driver);
+                            }else
+                            {
+                                JOptionPane.showMessageDialog(jFrame, "Os campos estão incorretos ou o utilizador não existe!");
                             }
-                            JOptionPane.showMessageDialog(jFrame, "Verifique se os campos estão corretos ou o utilizador não existe!");
-                        } catch (IOException ex){
-                            ex.printStackTrace();
-                        }
 
+                        } catch (IOException | ClassNotFoundException ex ) {
+                        }
                     }
                 });
             }
@@ -316,8 +338,8 @@ public class Driver {
 
                 jFrame.remove(panel);
 
-                JPanel panelLoging = new JPanel(new FlowLayout(FlowLayout.LEFT,150,20));
-                panelLoging.setBorder(new EmptyBorder(75, 0, 10 ,0));
+                JPanel panelSingup = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+                panelSingup.setBorder(new EmptyBorder(75, 0, 10, 0));
 
                 JLabel lName = new JLabel("Name");
                 JLabel lUsername = new JLabel("Username");
@@ -330,28 +352,31 @@ public class Driver {
                 JButton bSingUp = new JButton("SingUp");
                 bSingUp.setPreferredSize(new Dimension(100, 20));
 
-                panelLoging.add(lName);
-                panelLoging.add(name);
+                panelSingup.add(lName);
+                panelSingup.add(name);
 
-                panelLoging.add(lUsername);
-                panelLoging.add(username);
+                panelSingup.add(lUsername);
+                panelSingup.add(username);
 
-                panelLoging.add(lPassword);
-                panelLoging.add(password);
+                panelSingup.add(lPassword);
+                panelSingup.add(password);
 
                 JButton back = new JButton("Voltar");
-                back.setPreferredSize(new Dimension(80,20));
+                back.setPreferredSize(new Dimension(80, 20));
 
-                panelLoging.add(bSingUp);
-                panelLoging.add(back);
+                panelSingup.add(bSingUp);
+                panelSingup.add(back);
 
-                jFrame.add(panelLoging);
+                jFrame.add(panelSingup);
+                jFrame.setLocationRelativeTo(null);
+                jFrame.pack();
                 jFrame.setVisible(true);
+
 
                 back.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        jFrame.remove(panelLoging);
+                        jFrame.remove(panelSingup);
                         jFrame.add(panel);
                         jFrame.repaint();
                     }
@@ -363,20 +388,27 @@ public class Driver {
 
                         try {
                             //Verificar se algum campo está em branco
-                            if(username.getText().trim().equals("") || name.getText().trim().equals("") || password.getText().trim().equals("") ){
+                            if (username.getText().trim().equals("") || name.getText().trim().equals("") || password.getText().trim().equals("")) {
                                 JOptionPane.showMessageDialog(jFrame, "Algum campo está por preencher!");
                                 throw new IOException();
                             }
-                            Socket socket = new Socket("localhost", 1234);
+                            if(!drivers.contains(new Driver(username.getText()) )){
+                                Driver driver = new Driver(username.getText(), name.getText(), password.getText());
 
-                            Driver driver = new Driver(socket, username.getText(), name.getText(), password.getText());
-                            driver.closeSocket();
+                                jFrame.remove(panelSingup);
+                                jFrame.add(panel);
+                                jFrame.repaint();
 
-                            jFrame.remove(panelLoging);
-                            jFrame.add(panel);
-                            jFrame.repaint();
+                                JOptionPane.showMessageDialog(jFrame, "Utilizador registado com sucesso!");
+                            }
+                            else{
+                                JOptionPane.showMessageDialog(jFrame, "O username já está a ser utilizado!");
+                                username.setText("");
+                                name.setText("");
+                                password.setText("");
+                            }
 
-                            JOptionPane.showMessageDialog(jFrame, "Utilizador registado com sucesso");
+
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
@@ -387,17 +419,56 @@ public class Driver {
 
             }
         });
+        jFrame.setPreferredSize(new Dimension(500, 500));
+        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jFrame.setResizable(false);
+        jFrame.pack();
+        jFrame.setVisible(true);
+        jFrame.setLocationRelativeTo(null);
     }
 
-    private void userLoggedIn(Driver driver){
+    private static void userLoggedIn(Driver driver) {
+        //conectar o utilizador
+        try {
+            Socket socket = new Socket("localhost", 1234);
+            driver.connet(socket);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        JToolBar leftBar = new JToolBar();
+
+        JButton bLocation = new JButton("Minha Localização");
+        bLocation.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        JButton bAreaAlerts = new JButton("Áreas de alertas");
+        JButton bAlerts = new JButton("Alertas Gerais");
+        JButton bFriends = new JButton("Amigos");
+        JButton bGroups = new JButton("Grupos");
+        bGroups.setPreferredSize(new Dimension(80, 20));
+
+        leftBar.add(bLocation);
+        leftBar.add(bAreaAlerts);
+        leftBar.add(bAlerts);
+        leftBar.add(bFriends);
+        leftBar.add(bGroups);
+
+        jFrame.setLayout(new BorderLayout());
+        jFrame.getContentPane().add(leftBar, BorderLayout.PAGE_START);
+        jFrame.setSize(500, 500);
+        jFrame.repaint();
 
     }
 
     public static void main(String[] args) throws IOException {
 
+        Driver driver = new Driver("t", "Tiago Leite", "t");
         init();
-
-
 
 
         //Scanner scanner = new Scanner(System.in);

@@ -20,7 +20,7 @@ public class CentralNode {
         //verificar se existe algum condutor com o mesmo username
         if(!driversList.contains(driver)){
             Socket socket = new Socket();
-            driver = new Driver(socket, username, name, password);
+            driver = new Driver(username, name, password);
             driversList.add(driver);
         }
         else{throw new Exception("O username inserido já existe!");}

@@ -1,6 +1,6 @@
 package others;
 
-import entities.Driver;
+import novo.Driver;
 
 import java.util.ArrayList;
 

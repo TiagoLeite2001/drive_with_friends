@@ -1,14 +1,19 @@
 package entities;
 
+import novo.Driver;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Server {
-
+    static ArrayList<Driver> drivers;
     private ServerSocket serverSocket;
 
     public Server(ServerSocket serverSocket){
+        this.drivers = new ArrayList<>();
         this.serverSocket = serverSocket;
     }
 
@@ -16,7 +21,7 @@ public class Server {
         try {
             while (!serverSocket.isClosed()){
                 Socket socket = serverSocket.accept();
-                System.out.println("A new client has connected");
+                System.out.println("Cliente connectado");
                 ClientHandler clientHandler = new ClientHandler(socket);
 
                 Thread thread = new Thread(clientHandler);
@@ -35,6 +40,31 @@ public class Server {
         } catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    public static String login(String username, String password){
+        Driver driver = getDriver(username);
+        if(driver != null && driver.getPassword().equals(password)){ return username; }
+        return "error";
+    }
+
+    //Apagar?
+    public static boolean existsClient(String username){
+        Driver driver = new Driver(username);
+
+        if(drivers.contains(driver)){
+            return true;
+        }
+        return false;
+    }
+
+    public static Driver getDriver(String username){
+        for(Driver driver : drivers){
+            if(driver.getUsername().equals(username)){
+                return driver;
+            }
+        }
+        return null;
     }
 
     public static void main(String[] args) throws IOException {

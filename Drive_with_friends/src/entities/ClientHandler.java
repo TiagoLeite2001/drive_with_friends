@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 public class ClientHandler implements Runnable{
     public static  ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
+
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
@@ -29,6 +30,29 @@ public class ClientHandler implements Runnable{
         while (socket.isConnected()){
             try{
                 messageFromClient = bufferedReader.readLine();
+
+                switch (messageFromClient){
+                    case ("LOGIN"):
+                        String username = bufferedReader.readLine();
+                        String password = bufferedReader.readLine();
+
+                        //Server login
+                        Server.login(username, password);
+                        break;
+                    case ("SINGUP"):
+                        break;
+                    case ("LOCATION"):
+                        break;
+                    case ("AREA_ALERTS"):
+                        break;
+                    case ("CIRC_AREA_ALERT"):
+                        break;
+                    case ("FRIENDS"):
+                        break;
+                    case ("GROUPS"):
+                        break;
+                }
+
                 broadcastMessage(messageFromClient);
             } catch (IOException e){
                 closeEverything(socket, bufferedReader, bufferedWriter);
@@ -40,10 +64,22 @@ public class ClientHandler implements Runnable{
     public void broadcastMessage(String messageToSend){
         for(ClientHandler clientHandler : clientHandlers){
             try {
-
                     clientHandler.bufferedWriter.write(messageToSend);
                     clientHandler.bufferedWriter.newLine();
                     clientHandler.bufferedWriter.flush();
+
+            } catch (IOException e){
+                closeEverything(socket, bufferedReader, bufferedWriter);
+            }
+        }
+    }
+
+    public void broadcastClients(String messageToSend){
+        for(ClientHandler clientHandler : clientHandlers){
+            try {
+                clientHandler.bufferedWriter.write(messageToSend);
+                clientHandler.bufferedWriter.newLine();
+                clientHandler.bufferedWriter.flush();
 
             } catch (IOException e){
                 closeEverything(socket, bufferedReader, bufferedWriter);

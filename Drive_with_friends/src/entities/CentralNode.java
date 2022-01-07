@@ -1,5 +1,6 @@
 package entities;
 
+import novo.Driver;
 import others.Location;
 
 import java.net.Socket;

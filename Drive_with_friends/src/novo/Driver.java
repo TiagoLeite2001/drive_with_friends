@@ -129,19 +129,14 @@ public class Driver {
 
     public static void main(String[] args) {
         Socket socketDriver;
-        PrintWriter out = null;
-        BufferedReader in = null;
 
         try {
             socketDriver = new Socket(Variables.IP_DRIVER, Variables.PORT_SERVER);
-            out = new PrintWriter(socketDriver.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socketDriver.getInputStream()));
+            new InterfaceDriverThread(socketDriver).start();
         } catch (IOException e) {
-            System.err.println("Couldn't get I/O for "
-                    + "the connection to.");
-            System.exit(-1);
+            System.err.println("Connection refused.");
         }
-        new InterfaceDriverThread(in, out).start();
+
     }
 
 }

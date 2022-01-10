@@ -73,16 +73,15 @@ public class ServerDriverHandler extends Thread {
                 switch (request){
                     case Variables.SINGUP:
                         login = singUp();
-                        break;
                     case Variables.LOGIN:
+                        System.out.println(request);
                         login = login();
-                        break;
                     default:
                         break;
                 }
 
             } catch (IOException ex) {
-                ex.printStackTrace();
+                closeEverything(this.socketDriver, this.in, this.out);
             }
         }
         System.out.println("Client connected" );
@@ -137,9 +136,11 @@ public class ServerDriverHandler extends Thread {
         String inputUsername = in.readLine();
         System.out.println(inputUsername);
         String inputPassword = in.readLine();
+        System.out.println(inputPassword);
 
         if (drivers.getAll().isEmpty()) {
             out.println(Variables.INVALID_LOGIN);
+            System.out.println(Variables.INVALID_LOGIN);
             return false;
         }
             for (Object c : drivers.getAll()) {
@@ -148,6 +149,7 @@ public class ServerDriverHandler extends Thread {
                 if (driver.getUsername().equals(inputUsername)) {
                     if (driver.getPassword().equals(inputPassword)) {
                         out.println(Variables.VALID_LOGIN);
+                        System.out.println(Variables.VALID_LOGIN);
                         this.driver = driver;
                         return true;
                     }
@@ -205,6 +207,22 @@ public class ServerDriverHandler extends Thread {
                 Driver driver = (Driver) c;
                 out.println(driver.getUsername());
             }
+        }
+    }
+
+    public void closeEverything(Socket socket, BufferedReader bufferedReader, PrintWriter printWriter){
+        try {
+            if (bufferedReader != null){
+                bufferedReader.close();
+            }
+            if (printWriter != null){
+                printWriter.close();
+            }
+            if (socket != null){
+                socket.close();
+            }
+        } catch (IOException e){
+            e.printStackTrace();
         }
     }
 }

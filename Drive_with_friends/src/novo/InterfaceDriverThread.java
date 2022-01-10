@@ -5,22 +5,29 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.Socket;
 
 public class InterfaceDriverThread extends Thread {
-    static JFrame jFrame = new JFrame("Drive With Friends");
+    static JFrame frame = new JFrame("Drive With Friends");
+    static JPanel panelMenu = new JPanel(new GridLayout());
 
+    static Socket socket = null;
     static BufferedReader in;
     static PrintWriter out;
     Driver driver;
 
-    public InterfaceDriverThread(BufferedReader bufferedReader, PrintWriter printWriter) {
-        this.in = bufferedReader;
-        this.out = printWriter;
+    public InterfaceDriverThread(Socket socket) {
+        try {
+            this.socket = socket;
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -38,110 +45,88 @@ public class InterfaceDriverThread extends Thread {
 
             startDriverInterface();
 
-
         } catch (IOException ex1) {
-            ex1.printStackTrace();
+            closeEverything(this.socket, this.in, this.out);
         }
     }
 
     public static void startDriverInterface() {
 
-        jFrame.setSize(1200, 800);
-        jFrame.setDefaultCloseOperation(jFrame.EXIT_ON_CLOSE);
 
         JLabel title = new JLabel("Welcome");
-        title.setBorder(new EmptyBorder(20, 0, 10, 0));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JPanel panel = new JPanel();
-        panel.setBorder(new EmptyBorder(75, 0, 10, 0));
+        JPanel loginPanel = new JPanel();
+        loginPanel.setLayout(null);
+        //loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.PAGE_AXIS));
+        //loginPanel.setBorder(new EmptyBorder(75, 0, 10, 0));
 
-        JButton bLogin = new JButton("Login");
-        bLogin.setPreferredSize(new Dimension(200, 100));
+        JLabel lUsername = new JLabel("Username");
+        lUsername.setBounds(500, 100, 100, 20);
 
-        JButton bSingup = new JButton("Sing Up");
-        bSingup.setPreferredSize(new Dimension(200, 100));
+        JTextField username = new JTextField();
+        username.setBounds(500, 130, 100, 20);
 
-        panel.add(bLogin);
-        panel.add(bSingup);
+        JLabel lPassword = new JLabel("Password");
+        lPassword.setBounds(600, 130, 100, 20);
 
-        jFrame.add(title);
-        jFrame.add(panel);
-        jFrame.setVisible(true);
+        JTextField password = new JTextField();
+        password.setBounds(600, 130, 100, 20);
 
-        bLogin.addActionListener(e -> {
+        JButton buttonLogin = new JButton("Login");
+        //buttonLogin.setPreferredSize(new Dimension(200, 100));
+        buttonLogin.setBackground(Color.green);
 
-            jFrame.remove(panel);
+        JButton buttonSingup = new JButton("Sing Up");
+        //buttonSingup.setPreferredSize(new Dimension(100, 100));
 
-            JPanel panelLoging = new JPanel();
-            panelLoging.setBorder(new EmptyBorder(75, 0, 10, 0));
+        loginPanel.add(lUsername);
+        loginPanel.add(lPassword);
+        loginPanel.add(username);
+        loginPanel.add(password);
+        loginPanel.add(buttonLogin);
+        loginPanel.add(buttonSingup);
 
-            //Labels
-            JLabel lUsername = new JLabel("Username");
-            JLabel lPassword = new JLabel("Password");
+        buttonLogin.addActionListener(e -> {
 
-            //Inputs
-            JTextField username = new JTextField(20);
-            JTextField password = new JTextField(20);
-
-            //Buttons
-            JButton bLogin1 = new JButton("Login");
-            bLogin1.setPreferredSize(new Dimension(100, 20));
-
-            panelLoging.add(lUsername);
-            panelLoging.add(username);
-
-            panelLoging.add(lPassword);
-            panelLoging.add(password);
-
-            panelLoging.add(bLogin1);
-
-            JButton back = new JButton("Voltar");
-            back.setPreferredSize(new Dimension(80, 20));
-
-            panelLoging.add(back);
-
-            jFrame.add(panelLoging);
-            jFrame.setVisible(true);
-
-            back.addActionListener(e1 -> {
-                jFrame.remove(panelLoging);
-                jFrame.add(panel);
-                jFrame.repaint();
-            });
-
-            bLogin1.addActionListener(e12 -> {
                 try {
                     out.println(Variables.LOGIN);
-                    out.println(username);
-                    out.println(password);
+                    out.println(username.getText());
+                    out.println(password.getText());
 
-                    if(in.readLine().equals(Variables.VALID_LOGIN)){
+                    String input = in.readLine();
+                    System.out.println(input);
+
+                    if(input.equals(Variables.VALID_LOGIN)){
+
+                        frame.remove(loginPanel);
+                        frame.repaint();
+
                         userLoggedIn();
                     }
                     else {
-                        JOptionPane.showMessageDialog(jFrame, "Dados inválidos!");
+                        JOptionPane.showMessageDialog(frame, "Dados inválidos!");
                     }
 
                 } catch (IOException ex) {
                 }
-            });
+
         });
 
-        bSingup.addActionListener(e -> {
+        buttonSingup.addActionListener(e -> {
 
-            jFrame.remove(panel);
+            frame.remove(loginPanel);
 
             JPanel panelSingup = new JPanel();
             panelSingup.setBorder(new EmptyBorder(75, 0, 10, 0));
 
             JLabel lName = new JLabel("Name");
-            JLabel lUsername = new JLabel("Username");
-            JLabel lPassword = new JLabel("Password");
+            //JLabel lUsername = new JLabel("Username");
+            //JLabel lPassword = new JLabel("Password");
 
             JTextField name = new JTextField(20);
-            JTextField username = new JTextField(20);
-            JTextField password = new JTextField(20);
+            //JTextField username = new JTextField(20);
+            //JTextField password = new JTextField(20);
 
             JButton bSingUp = new JButton("SingUp");
             bSingUp.setPreferredSize(new Dimension(100, 20));
@@ -161,16 +146,16 @@ public class InterfaceDriverThread extends Thread {
             panelSingup.add(bSingUp);
             panelSingup.add(back);
 
-            jFrame.add(panelSingup);
-            jFrame.setLocationRelativeTo(null);
-            jFrame.pack();
-            jFrame.setVisible(true);
+            frame.add(panelSingup);
+            frame.setLocationRelativeTo(null);
+            frame.pack();
+            frame.setVisible(true);
 
 
             back.addActionListener(e13 -> {
-                jFrame.remove(panelSingup);
-                jFrame.add(panel);
-                jFrame.repaint();
+                frame.remove(panelSingup);
+                frame.add(loginPanel);
+                frame.repaint();
             });
 
             bSingUp.addActionListener(e14 -> {
@@ -192,7 +177,7 @@ public class InterfaceDriverThread extends Thread {
                                     singedUp = true;
                                     break;
                                 case Variables.INVALID_SINGUP:
-                                    JOptionPane.showMessageDialog(jFrame, "O username já está a ser utilizado!");
+                                    JOptionPane.showMessageDialog(frame, "O username já está a ser utilizado!");
                                     break;
                             }
 
@@ -200,25 +185,29 @@ public class InterfaceDriverThread extends Thread {
                             ex.printStackTrace();
                         }
                     }
-                    jFrame.remove(panelSingup);
-                    jFrame.add(panel);
-                    jFrame.repaint();
+                    frame.remove(panelSingup);
+                    frame.add(loginPanel);
+                    frame.repaint();
 
-                    JOptionPane.showMessageDialog(jFrame, "Utilizador registado com sucesso!");
+                    JOptionPane.showMessageDialog(frame, "Utilizador registado com sucesso!");
                     System.out.println("Utilizador registado com sucesso!");
                 }else {
-                    JOptionPane.showMessageDialog(jFrame, "Algum campo está por preencher!");
+                    JOptionPane.showMessageDialog(frame, "Algum campo está por preencher!");
                     System.out.println("Algum campo está por preencher!");
                 }
             });
 
         });
-        //jFrame.setPreferredSize(new Dimension(800, 500));
-        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        jFrame.setResizable(false);
-        jFrame.pack();
-        jFrame.setVisible(true);
-        jFrame.setLocationRelativeTo(null);
+
+        frame.add(title);
+        frame.add(loginPanel);
+        frame.setVisible(true);
+        frame.setPreferredSize(new Dimension(1200, 800));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
+        frame.setVisible(true);
+        frame.setLocationRelativeTo(null);
+        frame.pack();
     }
 
     private static void userLoggedIn() {
@@ -252,7 +241,7 @@ public class InterfaceDriverThread extends Thread {
                         try {
                             out.println(latitude);
                             out.println(longitude);
-                            JOptionPane.showMessageDialog(jFrame, "Localização alterada com sucesso!");
+                            JOptionPane.showMessageDialog(frame, "Localização alterada com sucesso!");
                             currentLocation.setText("A sua localização atual é: " + in.readLine());
                             latitude.setText("Latitude");
                             longitude.setText("Longitude");
@@ -266,8 +255,8 @@ public class InterfaceDriverThread extends Thread {
                 pLocation.add(latitude);
                 pLocation.add(longitude);
                 pLocation.add(changeLocation);
-                jFrame.add(pLocation);
-                jFrame.repaint();
+                frame.add(pLocation);
+                frame.repaint();
             }
         });
 
@@ -289,11 +278,31 @@ public class InterfaceDriverThread extends Thread {
         //bGroups.setPreferredSize(new Dimension(80, 20));
 
         //jFrame.add(topBar);
-        jFrame.setLayout(new BorderLayout());
-        jFrame.getContentPane().add(topBar, BorderLayout.PAGE_START);
-        jFrame.setSize(800, 500);
-        jFrame.repaint();
-        jFrame.setResizable(true);
+        frame.setLayout(new BorderLayout());
+        //frame.getContentPane().add(topBar, BorderLayout.PAGE_START);
 
+        frame.repaint();
+        frame.add(panelMenu, BorderLayout.CENTER);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
+
+    }
+
+
+    public void closeEverything(Socket socket, BufferedReader bufferedReader, PrintWriter printWriter){
+        try {
+            if (bufferedReader != null){
+                bufferedReader.close();
+            }
+            if (printWriter != null){
+                printWriter.close();
+            }
+            if (socket != null){
+                socket.close();
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
     }
 }

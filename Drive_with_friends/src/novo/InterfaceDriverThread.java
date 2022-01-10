@@ -1,11 +1,14 @@
 package novo;
 
+import com.google.gson.Gson;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
@@ -17,13 +20,13 @@ public class InterfaceDriverThread extends Thread {
     static Socket socket = null;
     static BufferedReader in;
     static PrintWriter out;
-    Driver driver;
+    private Driver driver;
 
     public InterfaceDriverThread(Socket socket) {
         try {
             this.socket = socket;
-            out = new PrintWriter(socket.getOutputStream(), true);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.out = new PrintWriter(socket.getOutputStream(), true);
+            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -35,6 +38,7 @@ public class InterfaceDriverThread extends Thread {
         super.run();
         try {
             out.println("DRIVER");
+            System.out.println("eehe");
 
             //Connect to BRODCAST GROUP
             MulticastSocket socketBroadcast = new MulticastSocket(Variables.PORT_BROADCAST);
@@ -50,8 +54,7 @@ public class InterfaceDriverThread extends Thread {
         }
     }
 
-    public static void startDriverInterface() {
-
+    public void startDriverInterface() {
 
         JLabel title = new JLabel("Welcome");
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -62,23 +65,27 @@ public class InterfaceDriverThread extends Thread {
         //loginPanel.setBorder(new EmptyBorder(75, 0, 10, 0));
 
         JLabel lUsername = new JLabel("Username");
-        lUsername.setBounds(500, 100, 100, 20);
+        lUsername.setFont(new Font("", Font.PLAIN, 20));
+        lUsername.setBounds(500, 300, 100, 20);
 
-        JTextField username = new JTextField();
-        username.setBounds(500, 130, 100, 20);
+        JTextField username = new JTextField("t");
+        username.setBounds(600, 300, 100, 20);
 
         JLabel lPassword = new JLabel("Password");
-        lPassword.setBounds(600, 130, 100, 20);
+        lPassword.setFont(new Font("", Font.PLAIN, 20));
+        lPassword.setBounds(500, 330, 100, 20);
 
-        JTextField password = new JTextField();
-        password.setBounds(600, 130, 100, 20);
+        JTextField password = new JTextField("t");
+        password.setFont(new Font("", Font.PLAIN, 20));
+        password.setBounds(600, 330, 100, 20);
 
         JButton buttonLogin = new JButton("Login");
-        //buttonLogin.setPreferredSize(new Dimension(200, 100));
         buttonLogin.setBackground(Color.green);
+        buttonLogin.setBounds(500, 360, 90, 30);
 
         JButton buttonSingup = new JButton("Sing Up");
-        //buttonSingup.setPreferredSize(new Dimension(100, 100));
+        buttonSingup.setBackground(Color.blue);
+        buttonSingup.setBounds(600, 360, 100, 30);
 
         loginPanel.add(lUsername);
         loginPanel.add(lPassword);
@@ -88,29 +95,7 @@ public class InterfaceDriverThread extends Thread {
         loginPanel.add(buttonSingup);
 
         buttonLogin.addActionListener(e -> {
-
-                try {
-                    out.println(Variables.LOGIN);
-                    out.println(username.getText());
-                    out.println(password.getText());
-
-                    String input = in.readLine();
-                    System.out.println(input);
-
-                    if(input.equals(Variables.VALID_LOGIN)){
-
-                        frame.remove(loginPanel);
-                        frame.repaint();
-
-                        userLoggedIn();
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(frame, "Dados inválidos!");
-                    }
-
-                } catch (IOException ex) {
-                }
-
+            login(username.getText(), password.getText(), loginPanel);
         });
 
         buttonSingup.addActionListener(e -> {
@@ -118,30 +103,28 @@ public class InterfaceDriverThread extends Thread {
             frame.remove(loginPanel);
 
             JPanel panelSingup = new JPanel();
-            panelSingup.setBorder(new EmptyBorder(75, 0, 10, 0));
+            panelSingup.add(username);
+            panelSingup.add(lUsername);
+            panelSingup.add(password);
+            panelSingup.add(lPassword);
 
-            JLabel lName = new JLabel("Name");
-            //JLabel lUsername = new JLabel("Username");
-            //JLabel lPassword = new JLabel("Password");
+            JLabel lName = new JLabel("Nome");
+            lName.setFont(new Font("", Font.PLAIN, 20));
+            lName.setBounds(500, 360, 100, 20);
 
             JTextField name = new JTextField(20);
-            //JTextField username = new JTextField(20);
-            //JTextField password = new JTextField(20);
-
-            JButton bSingUp = new JButton("SingUp");
-            bSingUp.setPreferredSize(new Dimension(100, 20));
+            name.setFont(new Font("", Font.PLAIN, 20));
+            name.setBounds(500, 380, 90, 30);
 
             panelSingup.add(lName);
             panelSingup.add(name);
 
-            panelSingup.add(lUsername);
-            panelSingup.add(username);
-
-            panelSingup.add(lPassword);
-            panelSingup.add(password);
-
             JButton back = new JButton("Voltar");
             back.setPreferredSize(new Dimension(80, 20));
+
+            JButton bSingUp = new JButton("Sing Up");
+            buttonSingup.setBackground(Color.blue);
+            buttonSingup.setBounds(500, 410, 100, 30);
 
             panelSingup.add(bSingUp);
             panelSingup.add(back);
@@ -150,7 +133,6 @@ public class InterfaceDriverThread extends Thread {
             frame.setLocationRelativeTo(null);
             frame.pack();
             frame.setVisible(true);
-
 
             back.addActionListener(e13 -> {
                 frame.remove(panelSingup);
@@ -172,7 +154,7 @@ public class InterfaceDriverThread extends Thread {
                             out.println(password.getText());
                             String answer = in.readLine();
                             System.out.println(answer);
-                            switch (answer){
+                            switch (answer) {
                                 case Variables.VALID_SINGUP:
                                     singedUp = true;
                                     break;
@@ -191,7 +173,12 @@ public class InterfaceDriverThread extends Thread {
 
                     JOptionPane.showMessageDialog(frame, "Utilizador registado com sucesso!");
                     System.out.println("Utilizador registado com sucesso!");
-                }else {
+                    try {
+                        userLoggedIn();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                } else {
                     JOptionPane.showMessageDialog(frame, "Algum campo está por preencher!");
                     System.out.println("Algum campo está por preencher!");
                 }
@@ -209,99 +196,162 @@ public class InterfaceDriverThread extends Thread {
         frame.setLocationRelativeTo(null);
         frame.pack();
     }
+    
+    public void login(String username, String password, JPanel loginPanel){
+        try {
+            out.println(Variables.LOGIN);
+            out.println(username);
+            out.println(password);
 
-    private static void userLoggedIn() {
+            String input = in.readLine();
+            System.out.println(input);
+
+            if (input.equals(Variables.VALID_LOGIN)) {
+                frame.remove(loginPanel);
+                frame.repaint();
+
+                userLoggedIn();
+            } else {
+                JOptionPane.showMessageDialog(frame, "Dados inválidos!");
+            }
+
+        } catch (IOException ex) {}
+    }
+
+    private void userLoggedIn() throws IOException {
+        //Recebe o driver info
+        Gson gson = new Gson();
+        this.driver = gson.fromJson(in.readLine(), Driver.class);
+
+        System.out.println(this.driver.getCurrentLocation().toString());
 
         JToolBar topBar = new JToolBar();
+        topBar.setBounds(100, 100, 500, 200);
 
-        JButton bLocation = new JButton("Minha Localização");
-        topBar.add(bLocation);
-        JPanel pLocation = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+        JPanel menuPanel = new JPanel();
 
-        bLocation.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                out.println(Variables.LOCATION);
-                JLabel currentLocation = new JLabel();
+        JButton buttonLocation = new JButton("Minha Localização");
+        topBar.add(buttonLocation);
 
-                try {
-                    currentLocation.setText(in.readLine());
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+        JButton buttonAreaAlerts = new JButton("Áreas de alertas");
+        topBar.add(buttonAreaAlerts);
+        JPanel panelAreaAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
 
-                JLabel newLocation = new JLabel("Nova localização: ");
-                JTextField latitude = new JTextField("Latitude");
-                JTextField longitude = new JTextField("Longitude");
+        JButton buttonAlerts = new JButton("Alertas Gerais");
+        topBar.add(buttonAlerts);
+        JPanel panelAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
 
-                JButton changeLocation = new JButton("Alterar localização");
-                changeLocation.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        try {
-                            out.println(latitude);
-                            out.println(longitude);
-                            JOptionPane.showMessageDialog(frame, "Localização alterada com sucesso!");
-                            currentLocation.setText("A sua localização atual é: " + in.readLine());
-                            latitude.setText("Latitude");
-                            longitude.setText("Longitude");
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                });
-                pLocation.add(currentLocation);
-                pLocation.add(newLocation);
-                pLocation.add(latitude);
-                pLocation.add(longitude);
-                pLocation.add(changeLocation);
-                frame.add(pLocation);
-                frame.repaint();
-            }
-        });
+        JButton buttonFriends = new JButton("Amigos");
+        topBar.add(buttonFriends);
+        JPanel panelFriends = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
 
-        JButton bAreaAlerts = new JButton("Áreas de alertas");
-        topBar.add(bAreaAlerts);
-        JPanel pAreaAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+        JButton buttonGroups = new JButton("Grupos");
+        topBar.add(buttonGroups);
+        JPanel panelGroups = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
 
-        JButton bAlerts = new JButton("Alertas Gerais");
-        topBar.add(bAlerts);
-        JPanel pAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+        JPanel chat = new JPanel();
+        //chat.setBackground(Color.gray);
+        chat.setBounds(800, 100, 350, 600);
 
-        JButton bFriends = new JButton("Amigos");
-        topBar.add(bFriends);
-        JPanel pFriends = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
+        JLabel label = new JLabel("User X\n User z");
+        JLabel label2 = new JLabel("User X");
+        label.setSize(70,20);
 
-        JButton bGroups = new JButton("Grupos");
-        topBar.add(bGroups);
-        JPanel pGroups = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
-        //bGroups.setPreferredSize(new Dimension(80, 20));
+        JList list = new JList();
 
-        //jFrame.add(topBar);
-        frame.setLayout(new BorderLayout());
-        //frame.getContentPane().add(topBar, BorderLayout.PAGE_START);
+        list.add( label);
+        list.add( label2);
 
+        JScrollPane scroll = new JScrollPane(list);
+        scroll.setBounds(800, 100, 500, 500);
+        scroll.setBackground(Color.blue);
+        chat.add(scroll);
+
+        menuPanel.add(topBar);
+
+        frame.add(chat);
+        frame.add(menuPanel);
+        frame.getContentPane().add(topBar, BorderLayout.PAGE_START);
+        frame.setResizable(true);
         frame.repaint();
         frame.add(panelMenu, BorderLayout.CENTER);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
 
+        buttonLocation.addActionListener(e -> {
+
+
+            JPanel panelLocation = new JPanel();
+            panelLocation.setBackground(Color.green);
+            panelLocation.setLayout(null);
+            panelLocation.setSize(500, 300);
+
+            JLabel currentLocation = new JLabel();
+            currentLocation.setBounds(500, 500,100,20);
+            currentLocation.setText("Localização atual: " + driver.getCurrentLocation().toString());
+
+            JLabel newLocation = new JLabel("Nova localização: ");
+            newLocation.setBounds(500,500,100,100);
+
+            JTextField latitude = new JTextField("Latitude");
+            latitude.setBounds(500,600,100,100);
+            JTextField longitude = new JTextField("Longitude");
+            latitude.setBounds(500,700,100,100);
+
+            JButton changeLocation = new JButton("Alterar localização");
+
+            panelLocation.add(currentLocation);
+            panelLocation.add(newLocation);
+            panelLocation.add(latitude);
+            panelLocation.add(longitude);
+            panelLocation.add(changeLocation);
+
+            //frame.removeAll();
+            frame.add(panelLocation);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.pack();
+            frame.setVisible(true);
+            frame.repaint();
+
+            changeLocation.addActionListener(e1 -> {
+                try {
+                    out.println(Variables.LOCATION);
+                    out.println(Variables.NEW_LOCATION);
+                    out.println(latitude);
+                    out.println(longitude);
+                    JOptionPane.showMessageDialog(frame, "Localização alterada com sucesso!");
+                    currentLocation.setText("A sua localização atual é: " + in.readLine());
+                    latitude.setText("Latitude");
+                    longitude.setText("Longitude");
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+        });
+
+
+        //bGroups.setPreferredSize(new Dimension(80, 20));
+
+        //jFrame.add(topBar);
+
+
     }
 
 
-    public void closeEverything(Socket socket, BufferedReader bufferedReader, PrintWriter printWriter){
+    public void closeEverything(Socket socket, BufferedReader bufferedReader, PrintWriter printWriter) {
         try {
-            if (bufferedReader != null){
+            if (bufferedReader != null) {
                 bufferedReader.close();
             }
-            if (printWriter != null){
+            if (printWriter != null) {
                 printWriter.close();
             }
-            if (socket != null){
+            if (socket != null) {
                 socket.close();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

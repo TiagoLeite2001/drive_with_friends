@@ -8,12 +8,13 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class Driver {
+public class Driver implements Serializable{
 
     private String username;
     private String name;
     private String password;
     private Location currentLocation;
+    private String currentLocationString;
     private ArrayList<Driver> friends;
     private ArrayList<Group> groups;
     private ArrayList<AlertLocation> alertsLocations;
@@ -24,6 +25,8 @@ public class Driver {
         this.username = username;
         this.name = name;
         this.password = password;
+        this.currentLocation = new Location(0,0);
+        this.radiusLocalArea = 0;
     }
 
     public Driver(String username) {
@@ -60,6 +63,10 @@ public class Driver {
 
     public Location getCurrentLocation() {
         return currentLocation;
+    }
+
+    public void setCurrentLocationString(String locationString){
+        this.currentLocationString = locationString;
     }
 
     public void setCurrentLocation(double latitude, double longitude) {

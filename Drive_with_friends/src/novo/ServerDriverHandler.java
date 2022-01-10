@@ -1,12 +1,8 @@
 package novo;
 
-import entities.Server;
-import others.Location;
+import com.google.gson.Gson;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -86,7 +82,15 @@ public class ServerDriverHandler extends Thread {
         }
         System.out.println("Client connected" );
 
+
+
         //User is logged in
+        //Send user info
+        Gson gson = new Gson();
+        String driver = gson.toJson(this.driver);
+        out.println(driver);
+        System.out.println(driver);
+
         try {
             while(socketDriver.isConnected()){
                 request = in.readLine();
@@ -162,13 +166,6 @@ public class ServerDriverHandler extends Thread {
 
 
     public void location(){
-
-        if(!this.driver.getCurrentLocation().toString().equals(null)){
-            out.println(this.driver.getCurrentLocation().toString());
-        }
-        else {
-            out.println("A sua localização é desconhecida!");
-        }
 
         try {
             if (in.readLine().equals(Variables.NEW_LOCATION)){

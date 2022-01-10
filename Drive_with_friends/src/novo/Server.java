@@ -76,8 +76,6 @@ public class Server {
 
         System.out.println("Server waiting for connection.");
 
-        boolean listening = true;
-
         try {
             while (!serverSocket.isClosed()) {
                 Socket socketClient = serverSocket.accept();
@@ -104,8 +102,6 @@ public class Server {
         }catch (IOException e){
             e.printStackTrace();
         }
-
-
 
         socketBroadcast.leaveGroup(addressBroadcast);
         socketBroadcast.close();

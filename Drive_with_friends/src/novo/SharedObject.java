@@ -1,3 +1,9 @@
 package novo;
-public class SharedObject {
+
+import java.io.Serializable;
+
+public class SharedObject implements Serializable {
+    public SharedObject(){
+
+    }
 }

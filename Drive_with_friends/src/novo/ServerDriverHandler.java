@@ -1,5 +1,8 @@
 package novo;
 
+import entities.Server;
+import others.Location;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,6 +31,7 @@ public class ServerDriverHandler extends Thread {
     SharedObject sharedObject;
 
     SynchronizedArrayList<Driver> drivers;
+    Driver driver = null;
 
     DatagramPacket packetBroadcast;
     DatagramPacket packetMulticastNorte;
@@ -58,60 +62,149 @@ public class ServerDriverHandler extends Thread {
     @Override
     public void run() {
         String request;
-        String inputName;
-        String inputUsername;
-        String inputPassword;
 
         boolean login = false;
 
         while (!login) {
             try {
-                boolean userExists = false;
                 request = in.readLine();
-                System.out.println(request);
-                inputName = in.readLine();
-                inputUsername = in.readLine();
-                inputPassword = in.readLine();
-                if (request.equals(Variables.SINGUP)) {
-                    for (Object c : drivers.getAll()) {
-                        Driver driver = (Driver) c;
-                        if (driver.getClass().equals(inputUsername)) {
-                            out.println(Variables.INVALID_SINGUP);
-                            userExists = true;
-                        }
-                    }
-                    if (!userExists) {
-                        login = true;
-                        Driver newDriver = new Driver(inputName,inputUsername, inputPassword);
-                        drivers.add(newDriver);
-                        out.println(Variables.VALID_SINGUP);
-                    }
-                } else if (request.equals(Variables.LOGIN)) {
-                    if (drivers.getAll().isEmpty()) {
-                        out.println(Variables.INVALID_LOGIN);
-                    } else {
-                        for (Object c : drivers.getAll()) {
+                System.out.println("Request:" + request);
 
-                            Driver driver = (Driver) c;
-                            if (driver.getUsername().equals(inputUsername)) {
-                                if (driver.getPassword().equals(inputPassword)) {
-                                    out.println(Variables.VALID_LOGIN);
-                                    login = true;
-                                }
-                            }
-                        }
-                        if (login == false) {
-                            out.println(Variables.INVALID_LOGIN);
-                        }
-                    }
+                switch (request){
+                    case Variables.SINGUP:
+                        login = singUp();
+                        break;
+                    case Variables.LOGIN:
+                        login = login();
+                        break;
+                    default:
+                        break;
                 }
+
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         }
-        System.out.println("...new client connected" + " UserName: " );
-        out.println(Variables.VALID_LOGIN);
+        System.out.println("Client connected" );
+
+        //User is logged in
+        try {
+            while(socketDriver.isConnected()){
+                request = in.readLine();
+                switch (request){
+                    case (Variables.LOCATION):
+                        location();
+                        break;
+                    case (Variables.AREA_ALERTS):
+                        areaAlerts();
+                        break;
+                    case (Variables.CIRCUNC_ALERTS):
+                        break;
+                    case (Variables.FRIENDS):
+                        friends();
+                        break;
+                    case (Variables.GROUPS):
+                        break;
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public boolean singUp() throws IOException {
+        String inputName = in.readLine();
+        String inputUsername = in.readLine();
+        String inputPassword = in.readLine();
+
+        for (Object c : drivers.getAll()) {
+            Driver driver = (Driver) c;
+            if (driver.getClass().equals(inputUsername)) {
+                out.println(Variables.INVALID_SINGUP);
+                return false;
+            }
+        }
+
+        Driver newDriver = new Driver(inputName,inputUsername, inputPassword);
+        this.driver = newDriver;
+        drivers.add(newDriver);
+        out.println(Variables.VALID_SINGUP);
+
+        return true;
+    }
+
+    public boolean login() throws IOException {
+        String inputUsername = in.readLine();
+        System.out.println(inputUsername);
+        String inputPassword = in.readLine();
+
+        if (drivers.getAll().isEmpty()) {
+            out.println(Variables.INVALID_LOGIN);
+            return false;
+        }
+            for (Object c : drivers.getAll()) {
+
+                Driver driver = (Driver) c;
+                if (driver.getUsername().equals(inputUsername)) {
+                    if (driver.getPassword().equals(inputPassword)) {
+                        out.println(Variables.VALID_LOGIN);
+                        this.driver = driver;
+                        return true;
+                    }
+                }
+            }
+
+                out.println(Variables.INVALID_LOGIN);
+            return false;
+    }
 
 
+    public void location(){
+
+        if(!this.driver.getCurrentLocation().toString().equals(null)){
+            out.println(this.driver.getCurrentLocation().toString());
+        }
+        else {
+            out.println("A sua localização é desconhecida!");
+        }
+
+        try {
+            if (in.readLine().equals(Variables.NEW_LOCATION)){
+                newLocation();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void newLocation(){
+        try {
+                String sLatit = in.readLine();
+                double latit = Double.parseDouble(sLatit);
+
+                String sLongit = in.readLine();
+                double longit = Double.parseDouble(sLongit);
+
+                this.driver.setCurrentLocation(latit, longit);
+                out.println(Variables.VALID_LOCATION);
+                out.println(this.driver.getCurrentLocation().toString());
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void areaAlerts(){
+
+    }
+
+    public void friends(){
+        if(!this.driver.getFriends().isEmpty()){
+            for (Object c : drivers.getAll()) {
+
+                Driver driver = (Driver) c;
+                out.println(driver.getUsername());
+            }
+        }
     }
 }

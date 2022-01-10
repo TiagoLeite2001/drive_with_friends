@@ -69,10 +69,12 @@ public class Server {
             System.exit(-1);
         }
 
+        Driver driver = new Driver("t","t", "t");
+        drivers.add(driver);
 
 
 
-        System.out.println("Server wainting for connection...");
+        System.out.println("Server waiting for connection.");
 
         boolean listening = true;
 

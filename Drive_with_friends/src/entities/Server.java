@@ -1,7 +1,6 @@
 package entities;
 
 import novo.Driver;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.ServerSocket;

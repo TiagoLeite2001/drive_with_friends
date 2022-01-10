@@ -112,24 +112,16 @@ public class InterfaceDriverThread extends Thread {
 
             bLogin1.addActionListener(e12 -> {
                 try {
-                    //Verificar se algum campo está em branco
-                    if (username.getText().trim().equals("") || password.getText().trim().equals("")) {
-                        JOptionPane.showMessageDialog(jFrame, "Algum campo está por preencher!");
-                        throw new IOException();
+                    out.println(Variables.LOGIN);
+                    out.println(username);
+                    out.println(password);
+
+                    if(in.readLine().equals(Variables.VALID_LOGIN)){
+                        userLoggedIn();
                     }
-
-                    /**
-                     Driver driver = getDriver(username.getText());
-
-                     if(driver.password.equals(password.getText())){
-                     jFrame.remove(panelLoging);
-                     jFrame.repaint();
-                     userLoggedIn(driver);
-                     }else
-                     {
-                     JOptionPane.showMessageDialog(jFrame, "Os campos estão incorretos ou o utilizador não existe!");
-                     }
-                     */
+                    else {
+                        JOptionPane.showMessageDialog(jFrame, "Dados inválidos!");
+                    }
 
                 } catch (IOException ex) {
                 }
@@ -229,7 +221,7 @@ public class InterfaceDriverThread extends Thread {
         jFrame.setLocationRelativeTo(null);
     }
 
-    private static void userLoggedIn(Driver driver) {
+    private static void userLoggedIn() {
 
         JToolBar topBar = new JToolBar();
 
@@ -240,12 +232,15 @@ public class InterfaceDriverThread extends Thread {
         bLocation.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                out.println(Variables.LOCATION);
                 JLabel currentLocation = new JLabel();
-                if (driver.getCurrentLocation() != null) {
-                    currentLocation.setText("A sua localização atual é: " + driver.getCurrentLocation().toString());
-                } else {
-                    currentLocation.setText("A sua localização atual está por definir");
+
+                try {
+                    currentLocation.setText(in.readLine());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
+
                 JLabel newLocation = new JLabel("Nova localização: ");
                 JTextField latitude = new JTextField("Latitude");
                 JTextField longitude = new JTextField("Longitude");
@@ -254,18 +249,14 @@ public class InterfaceDriverThread extends Thread {
                 changeLocation.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        double latit = 0;
-                        double longit = 0;
                         try {
-                            latit = Double.parseDouble(latitude.getText());
-                            longit = Double.parseDouble(longitude.getText());
-                            driver.setCurrentLocation(latit, longit);
+                            out.println(latitude);
+                            out.println(longitude);
                             JOptionPane.showMessageDialog(jFrame, "Localização alterada com sucesso!");
-                            currentLocation.setText("A sua localização atual é: " + driver.getCurrentLocation().toString());
+                            currentLocation.setText("A sua localização atual é: " + in.readLine());
                             latitude.setText("Latitude");
                             longitude.setText("Longitude");
-                        } catch (NumberFormatException ex) {
-                            JOptionPane.showMessageDialog(jFrame, "Latitude e/ou longitude errados!");
+                        } catch (IOException ex) {
                             ex.printStackTrace();
                         }
                     }
@@ -302,6 +293,7 @@ public class InterfaceDriverThread extends Thread {
         jFrame.getContentPane().add(topBar, BorderLayout.PAGE_START);
         jFrame.setSize(800, 500);
         jFrame.repaint();
+        jFrame.setResizable(true);
 
     }
 }

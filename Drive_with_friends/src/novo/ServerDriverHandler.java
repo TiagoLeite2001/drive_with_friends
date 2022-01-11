@@ -168,7 +168,8 @@ public class ServerDriverHandler extends Thread {
     public void location(){
 
         try {
-            if (in.readLine().equals(Variables.NEW_LOCATION)){
+            String request = in.readLine();
+            if (request.equals(Variables.NEW_LOCATION)){
                 newLocation();
             }
         } catch (IOException e) {

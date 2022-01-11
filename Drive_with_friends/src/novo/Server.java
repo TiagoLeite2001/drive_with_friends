@@ -7,8 +7,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
+    static SynchronizedArrayList<Driver> drivers = new SynchronizedArrayList<>();
     public static void main(String[] args) throws IOException {
-        SynchronizedArrayList<Driver> drivers = new SynchronizedArrayList<>();
+
 
         ServerSocket serverSocket = null;
 
@@ -70,9 +71,9 @@ public class Server {
         }
 
         Driver driver = new Driver("t","t", "t");
+        Driver driver2 = new Driver("driver 2","t", "t");
         drivers.add(driver);
-
-
+        drivers.add(driver2);
 
         System.out.println("Server waiting for connection.");
 

@@ -14,7 +14,6 @@ public class Driver implements Serializable{
     private String name;
     private String password;
     private Location currentLocation;
-    private String currentLocationString;
     private ArrayList<Driver> friends;
     private ArrayList<Group> groups;
     private ArrayList<AlertLocation> alertsLocations;
@@ -26,6 +25,9 @@ public class Driver implements Serializable{
         this.name = name;
         this.password = password;
         this.currentLocation = new Location(0,0);
+        this.friends = new ArrayList<>();
+        this.groups = new ArrayList<>();
+        this.alertsLocations = new ArrayList<>();
         this.radiusLocalArea = 0;
     }
 
@@ -65,10 +67,6 @@ public class Driver implements Serializable{
         return currentLocation;
     }
 
-    public void setCurrentLocationString(String locationString){
-        this.currentLocationString = locationString;
-    }
-
     public void setCurrentLocation(double latitude, double longitude) {
         Location currentLocation = new Location(latitude, longitude);
 
@@ -77,6 +75,10 @@ public class Driver implements Serializable{
 
     public ArrayList<Driver> getFriends() {
         return friends;
+    }
+
+    public void addFriend(Driver friend) {
+        this.friends.add(friend);
     }
 
     public void setFriends(ArrayList<Driver> friends) {

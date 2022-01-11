@@ -102,11 +102,15 @@ public class ServerDriverHandler extends Thread {
                         areaAlerts();
                         break;
                     case (Variables.CIRCUNC_ALERTS):
+                        //circuncAlerts();
                         break;
-                    case (Variables.FRIENDS):
-                        friends();
+                    case (Variables.ALL_USERS):
+                        sendAllUsers();
                         break;
                     case (Variables.GROUPS):
+                        break;
+                    case (Variables.ADD_FRIEND):
+                        addFriend();
                         break;
                 }
             }
@@ -170,15 +174,6 @@ public class ServerDriverHandler extends Thread {
         try {
             String request = in.readLine();
             if (request.equals(Variables.NEW_LOCATION)){
-                newLocation();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void newLocation(){
-        try {
                 String sLatit = in.readLine();
                 double latit = Double.parseDouble(sLatit);
 
@@ -188,8 +183,9 @@ public class ServerDriverHandler extends Thread {
                 this.driver.setCurrentLocation(latit, longit);
                 out.println(Variables.VALID_LOCATION);
                 out.println(this.driver.getCurrentLocation().toString());
-
-        } catch (IOException e) {
+            }
+        } catch ( Exception e) {
+            out.println(Variables.INVALID_LOCATION);
             e.printStackTrace();
         }
     }
@@ -198,13 +194,33 @@ public class ServerDriverHandler extends Thread {
 
     }
 
-    public void friends(){
-        if(!this.driver.getFriends().isEmpty()){
-            for (Object c : drivers.getAll()) {
-
+    public void sendAllUsers(){
+        if(!Server.drivers.getAll().isEmpty()){
+            for (Object c : Server.drivers.getAll()) {
                 Driver driver = (Driver) c;
                 out.println(driver.getUsername());
             }
+        }
+        out.println(Variables.DONE);
+    }
+
+    public void addFriend() throws IOException {
+        String username = in.readLine();
+        boolean found = false;
+
+        if(!Server.drivers.getAll().isEmpty()){
+            for (Object c : Server.drivers.getAll()) {
+                Driver driver = (Driver) c;
+                if(driver.getUsername().equals(username)){
+                    this.driver.addFriend(driver);
+                    found = true;
+                }
+            }
+        }
+        if (found){
+            out.println(Variables.DONE);
+        }else {
+            out.println(Variables.ERROR);
         }
     }
 

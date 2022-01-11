@@ -29,6 +29,7 @@ public class Variables {
     protected static final String LOCATION = "LOCATION";
     protected static final String NEW_LOCATION = "NEW_LOCATION";
     protected static final String VALID_LOCATION = "VALID_LOCATION";
+    protected static final String INVALID_LOCATION = "INVALID_LOCATION";
 
     protected static final String DRIVER = "DRIVER";
     protected static final String PC = "PROTECAO_CIVIL";
@@ -40,8 +41,14 @@ public class Variables {
     protected static final String CIRCUNC_ALERTS = "CIRCUNC_ALERTS";
 
     protected static final String FRIENDS = "FRIENDS";
+    protected static final String ADD_FRIEND = "ADD_FRIEND";
+    protected static final String ALL_USERS = "ALL_USERS";
 
     protected static final String GROUPS = "GROUPS";
+    protected static final String DONE = "DONE";
+
+    protected static final String ERROR = "ERROR";
+
 
 
 }

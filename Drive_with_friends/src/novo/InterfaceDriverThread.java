@@ -1,15 +1,15 @@
 package novo;
 
 import com.google.gson.Gson;
-import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
-import java.lang.reflect.Type;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
@@ -54,7 +54,6 @@ public class InterfaceDriverThread extends Thread {
             Thread broadcastThread = new Thread(new ThreadMulticast(socketBroadcast));
             broadcastThread.start();
 
-            //new GUI(this).startDriverInterface();
             startDriverInterface();
 
         } catch (IOException ex1) {
@@ -62,362 +61,374 @@ public class InterfaceDriverThread extends Thread {
         }
     }
 
+
     public void startDriverInterface() {
-        System.out.println("Bem vindo" +
-                "\n 1 - Login\n" +
-                " 2 - Registar\n" +
-                " 0 - Sair ");
 
-        boolean goOn = true;
+        JPanel loginPanel = new JPanel();
+        loginPanel.setLayout(null);
 
-        while (goOn){
-            input = scanner.nextLine();
+        JLabel lUsername = new JLabel("Username");
+        lUsername.setBounds(600, 300, 100, 20);
 
-            switch (input){
-                case "0":
-                    goOn = false;
-                    break;
-                case "1":
-                    login();
-                case "2":
-            }
-        }
+        JTextField username = new JTextField("");
+        username.setBounds(600, 320, 100, 20);
 
+        JLabel lPassword = new JLabel("Password");
+        lPassword.setBounds(600, 340, 100, 20);
 
-    }
+        JTextField password = new JTextField("");
+        password.setBounds(600, 360, 100, 20);
 
-    public void login(){
-        System.out.println("Username: ");
-        String username = scanner.nextLine();
+        JButton buttonLogin = new JButton("Login");
+        buttonLogin.setBounds(600, 380, 100, 20);
 
-        System.out.println("Password: ");
-        String password = scanner.nextLine();
+        JButton buttonSingup = new JButton("Sing Up");
+        buttonSingup.setBounds(600, 400, 100, 20);
 
-        out.println(Variables.LOGIN);
-        out.println(username);
-        out.println(password);
+        loginPanel.add(lUsername);
+        loginPanel.add(lPassword);
+        loginPanel.add(username);
+        loginPanel.add(password);
+        loginPanel.add(buttonLogin);
+        loginPanel.add(buttonSingup);
 
-        String input = null;
-        try {
-            input = in.readLine();
-            if (input.equals(Variables.VALID_LOGIN)) {
-                userLoggedIn();
-            }
+        frame.setResizable(false);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        buttonLogin.addActionListener(e -> {
+            login(username.getText(), password.getText(), loginPanel);
+        });
 
-    }
+        buttonSingup.addActionListener(e -> {
 
-    public void userLoggedIn() throws IOException {
+            frame.remove(loginPanel);
 
-        Gson gson = new Gson();
-        this.driver = gson.fromJson(in.readLine(), Driver.class);
+            JPanel panelSingup = new JPanel();
+            panelSingup.setLayout(null);
 
-        boolean goOn = true;
+            panelSingup.add(username);
+            panelSingup.add(lUsername);
+            panelSingup.add(password);
+            panelSingup.add(lPassword);
 
-        while (goOn){
-            System.out.println(" 1 - Localização" +
-                    "\n 2 - Amigos" +
-                    "\n 3 - Grupos" +
-                    "\n 4 - Alertas");
-            input = scanner.nextLine();
-            switch (input){
-                case "0":
-                    goOn = false;
-                    break;
-                case "1":
-                    location();
-                case "2":
-                case "3":
-                case "4":
-            }
-        }
-    }
+            JLabel lName = new JLabel("Nome");
+            lName.setBounds(600, 260, 100, 20);
 
-    public void location(){
-        System.out.println(" A sua localização é: " + this.driver.getCurrentLocation());
+            JTextField name = new JTextField(20);
+            name.setBounds(600, 280, 100, 20);
 
-        boolean goOn = true;
+            panelSingup.add(lName);
+            panelSingup.add(name);
 
-        while (goOn){
-            System.out.println(" 1 - Definir nova localização" +
-                    "\n 0 - Voltar");
-            input = scanner.nextLine();
-            switch (input){
-                case "0":
-                    goOn = false;
-                    break;
-                case "1":
-                    newLocation();
-            }
-        }
-    }
+            JButton back = new JButton("Voltar");
+            back.setBounds(600, 420, 100, 20);
 
-    public void newLocation(){
-        out.println(Variables.NEW_LOCATION);
-        System.out.println("Latitude: ");
-        String latit = scanner.nextLine();
-        out.println(latit);
+            JButton bSingUp = new JButton("Sing Up");
+            bSingUp.setBounds(600, 390, 100, 20);
 
-        System.out.println("Longitude: ");
-        String longit = scanner.nextLine();
-        out.println(longit);
-    }
+            panelSingup.add(bSingUp);
+            panelSingup.add(back);
 
+            frame.add(panelSingup);
+            frame.setLocationRelativeTo(null);
+            frame.pack();
+            frame.setVisible(true);
 
-
-        /**
-
-        public void startDriverInterface() {
-
-            JPanel loginPanel = new JPanel(new GridBagLayout());
-
-            loginPanel.setBounds(100,100,100,100);
-
-            JLabel lUsername = new JLabel("Username");
-            JTextField username = new JTextField("        ");
-            JLabel lPassword = new JLabel("Password");
-            JTextField password = new JTextField("         ");
-
-            JButton buttonLogin = new JButton("Login");
-            buttonLogin.setSize( 100, 50);
-
-            JButton buttonSingup = new JButton("Sing Up");
-            buttonSingup.setSize( 100, 50);
-
-            loginPanel.add(lUsername);
-            loginPanel.add(lPassword);
-            loginPanel.add(username);
-            loginPanel.add(password);
-            loginPanel.add(buttonLogin);
-            loginPanel.add(buttonSingup);
-
-            buttonLogin.addActionListener(e -> {
-                login(username.getText(), password.getText(), loginPanel);
+            back.addActionListener(e13 -> {
+                frame.remove(panelSingup);
+                frame.add(loginPanel);
+                frame.repaint();
             });
 
-            buttonSingup.addActionListener(e -> {
+            bSingUp.addActionListener(e14 -> {
 
-                frame.remove(loginPanel);
+                //Verificar se algum campo está em branco
+                if (!username.getText().trim().equals("") || !name.getText().trim().equals("") || !password.getText().trim().equals("")) {
 
-                JPanel panelSingup = new JPanel();
-                panelSingup.add(username);
-                panelSingup.add(lUsername);
-                panelSingup.add(password);
-                panelSingup.add(lPassword);
-
-                JLabel lName = new JLabel("Nome");
-                lName.setFont(new Font("", Font.PLAIN, 20));
-                lName.setBounds(500, 360, 100, 20);
-
-                JTextField name = new JTextField(20);
-                name.setFont(new Font("", Font.PLAIN, 20));
-                name.setBounds(500, 380, 90, 30);
-
-                panelSingup.add(lName);
-                panelSingup.add(name);
-
-                JButton back = new JButton("Voltar");
-                back.setPreferredSize(new Dimension(80, 20));
-
-                JButton bSingUp = new JButton("Sing Up");
-                buttonSingup.setBackground(Color.blue);
-                buttonSingup.setBounds(500, 410, 100, 30);
-
-                panelSingup.add(bSingUp);
-                panelSingup.add(back);
-
-                frame.add(panelSingup);
-                frame.setLocationRelativeTo(null);
-                frame.pack();
-                frame.setVisible(true);
-
-                back.addActionListener(e13 -> {
-                    frame.remove(panelSingup);
-                    frame.add(loginPanel);
-                    frame.repaint();
-                });
-
-                bSingUp.addActionListener(e14 -> {
-
-                    //Verificar se algum campo está em branco
-                    if (!username.getText().trim().equals("") || !name.getText().trim().equals("") || !password.getText().trim().equals("")) {
-
-                        boolean singedUp = false;
-                        while (!singedUp) {
-                            try {
-                                out.println(Variables.SINGUP);
-                                out.println(name.getText());
-                                out.println(username.getText());
-                                out.println(password.getText());
-                                String answer = in.readLine();
-                                System.out.println(answer);
-                                switch (answer) {
-                                    case Variables.VALID_SINGUP:
-                                        singedUp = true;
-                                        break;
-                                    case Variables.INVALID_SINGUP:
-                                        JOptionPane.showMessageDialog(frame, "O username já está a ser utilizado!");
-                                        break;
-                                }
-
-                            } catch (IOException ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                        frame.remove(panelSingup);
-                        frame.add(loginPanel);
-                        frame.repaint();
-
-                        JOptionPane.showMessageDialog(frame, "Utilizador registado com sucesso!");
-                        System.out.println("Utilizador registado com sucesso!");
+                    boolean singedUp = false;
+                    while (!singedUp) {
                         try {
-                            userLoggedIn();
+                            out.println(Variables.SINGUP);
+                            out.println(name.getText());
+                            out.println(username.getText());
+                            out.println(password.getText());
+                            String answer = in.readLine();
+                            System.out.println(answer);
+                            switch (answer) {
+                                case Variables.VALID_SINGUP:
+                                    singedUp = true;
+                                    break;
+                                case Variables.INVALID_SINGUP:
+                                    JOptionPane.showMessageDialog(frame, "O username já está a ser utilizado!");
+                                    break;
+                            }
+
                         } catch (IOException ex) {
                             ex.printStackTrace();
                         }
-                    } else {
-                        JOptionPane.showMessageDialog(frame, "Algum campo está por preencher!");
-                        System.out.println("Algum campo está por preencher!");
                     }
-                });
+                    frame.remove(panelSingup);
+                    frame.setVisible(false);
 
-            });
-
-            frame.add(loginPanel);
-            frame.repaint();
-            frame.setVisible(true);
-            frame.setPreferredSize(new Dimension(1800, 1000));
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setResizable(true);
-            frame.setVisible(true);
-            frame.setLocationRelativeTo(null);
-            frame.pack();
-        }
-
-        public void login(String username, String password, JPanel loginPanel){
-            try {
-                out.println(Variables.LOGIN);
-                out.println(username);
-                out.println(password);
-
-                String input = in.readLine();
-                System.out.println(input);
-
-                if (input.equals(Variables.VALID_LOGIN)) {
-                    frame.remove(loginPanel);
-                    frame.repaint();
-
-                    userLoggedIn();
-                } else {
-                    JOptionPane.showMessageDialog(frame, "Dados inválidos!");
-                }
-
-            } catch (IOException ex) {}
-        }
-
-        private void userLoggedIn() throws IOException {
-
-            //Recebe o driver info
-            Gson gson = new Gson();
-            this.driver = gson.fromJson(in.readLine(), Driver.class);
-
-            JPanel menu = new JPanel(new GridBagLayout());
-
-            JPanel topBar = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            topBar.setBounds(100, 100, 500, 200);
-
-            JButton buttonLocation = new JButton("Minha Localização");
-            topBar.add(buttonLocation);
-
-            JButton buttonAreaAlerts = new JButton("Áreas de alertas");
-            topBar.add(buttonAreaAlerts);
-            JPanel panelAreaAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
-
-            JButton buttonAlerts = new JButton("Alertas Gerais");
-            topBar.add(buttonAlerts);
-            JPanel panelAlerts = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
-
-            JButton buttonFriends = new JButton("Amigos");
-            topBar.add(buttonFriends);
-            JPanel panelFriends = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
-
-            JButton buttonGroups = new JButton("Grupos");
-            topBar.add(buttonGroups);
-            JPanel panelGroups = new JPanel(new FlowLayout(FlowLayout.LEFT, 150, 20));
-
-            JPanel chat = new JPanel(new FlowLayout(FlowLayout.CENTER));
-            chat.add(new Label("Chat"));
-
-
-            menu.add(topBar);
-            menu.add(chat);
-            frame.add(menu);
-            frame.setResizable(true);
-            frame.repaint();
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.pack();
-            frame.setVisible(true);
-
-            buttonLocation.addActionListener(e -> {
-
-                JPanel panelLocation = new JPanel();
-                panelLocation.setBackground(Color.green);
-
-                JLabel currentLocation = new JLabel();
-                currentLocation.setBounds(500, 500,100,20);
-                currentLocation.setText("Localização atual: " + driver.getCurrentLocation().toString());
-
-                JLabel newLocation = new JLabel("Nova localização: ");
-                newLocation.setBounds(500,500,100,100);
-
-                JTextField latitude = new JTextField("Latitude");
-                latitude.setBounds(500,600,100,100);
-                JTextField longitude = new JTextField("Longitude");
-                latitude.setBounds(500,700,100,100);
-
-                JButton changeLocation = new JButton("Alterar localização");
-
-                panelLocation.add(currentLocation);
-                panelLocation.add(newLocation);
-                panelLocation.add(latitude);
-                panelLocation.add(longitude);
-                panelLocation.add(changeLocation);
-
-                //frame.removeAll();
-                menu.add(panelLocation);
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.pack();
-                frame.setVisible(true);
-                frame.repaint();
-
-                changeLocation.addActionListener(e1 -> {
+                    JOptionPane.showMessageDialog(frame, "Utilizador registado com sucesso!");
+                    System.out.println("Utilizador registado com sucesso!");
                     try {
-                        out.println(Variables.LOCATION);
-                        out.println(Variables.NEW_LOCATION);
-                        out.println(latitude);
-                        out.println(longitude);
-                        JOptionPane.showMessageDialog(frame, "Localização alterada com sucesso!");
-                        currentLocation.setText("A sua localização atual é: " + in.readLine());
-                        latitude.setText("Latitude");
-                        longitude.setText("Longitude");
+                        userLoggedIn();
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
-                });
-
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Algum campo está por preencher!");
+                    System.out.println("Algum campo está por preencher!");
+                }
             });
 
+        });
 
-            //bGroups.setPreferredSize(new Dimension(80, 20));
+        frame.add(loginPanel);
+        frame.repaint();
+        frame.setVisible(true);
+        frame.setPreferredSize(new Dimension(1200, 800));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLocationRelativeTo(null);
+        frame.pack();
+    }
 
-            //jFrame.add(topBar);
+    public void login(String username, String password, JPanel loginPanel) {
+        try {
+            out.println(Variables.LOGIN);
+            out.println(username);
+            out.println(password);
 
+            String input = in.readLine();
+            System.out.println(input);
+
+            if (input.equals(Variables.VALID_LOGIN)) {
+                frame.remove(loginPanel);
+                frame.repaint();
+                frame.setVisible(false);
+
+                userLoggedIn();
+            } else {
+                JOptionPane.showMessageDialog(frame, "Dados inválidos!");
+            }
+
+        } catch (IOException ex) {
+        }
+    }
+
+
+    public void userLoggedIn() throws IOException {
+        updateDriverInfo();
+
+        GUILocation();
+        GUIFriends();
+        GUIAlertas();
+        GUIChat();
+        GUIGroups();
+    }
+
+    private void GUILocation() {
+
+        JFrame frameLocation = new JFrame();
+        JPanel panelLocation = new JPanel();
+
+        panelLocation.setLayout(new GridLayout(0,1));
+
+        JLabel currentLocation = new JLabel();
+        currentLocation.setText("Localização atual: " + driver.getCurrentLocation().toString());
+        JLabel newLocation = new JLabel("Nova localização: ");
+        JTextField latitude = new JTextField("Latitude");
+        JTextField longitude = new JTextField("Longitude");
+        JButton changeLocation = new JButton("Alterar localização");
+
+        changeLocation.addActionListener(e1 -> {
+            try {
+                out.println(Variables.LOCATION);
+                out.println(Variables.NEW_LOCATION);
+                out.println(latitude.getText());
+                out.println(longitude.getText());
+                String resposta = in.readLine();
+                System.out.println("resposta" + resposta);
+
+                if(resposta.equals(Variables.VALID_LOCATION)){
+                    JOptionPane.showMessageDialog(frame, "Localização alterada com sucesso!");
+                    currentLocation.setText("A sua localização atual é: " + in.readLine());
+                    latitude.setText("Latitude");
+                    longitude.setText("Longitude");
+                }
+                else {
+                    JOptionPane.showMessageDialog(frame, "Erro a alterar a localização!");
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        panelLocation.add(currentLocation);
+        panelLocation.add(newLocation);
+        panelLocation.add(latitude);
+        panelLocation.add(longitude);
+        panelLocation.add(changeLocation);
+
+        frameLocation.add(panelLocation,BorderLayout.CENTER);
+        frameLocation.setTitle("Localização");;
+        frameLocation.pack();
+        frameLocation.setVisible(true);
+        frameLocation.repaint();
+        frameLocation.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
+
+    private void GUIFriends() throws IOException {
+
+        JFrame frame = new JFrame();
+        frame.setTitle("Amigos");
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0,1));
+
+        JLabel friends = new JLabel();
+
+        JTextArea friendsArea = new JTextArea("");
+        if(!(this.driver.getFriends() == null)){
+            friends.setText("Amigos: " + this.driver.getFriends().size());
+            for (Object c : this.driver.getFriends()) {
+
+                Driver friend = (Driver) c;
+                friendsArea.append( friend.getUsername());
+            }
 
         }
-         */
+
+
+
+        out.println(Variables.ALL_USERS);
+
+        JTextArea usersArea = new JTextArea("");
+
+        int count = 0;
+        String input = in.readLine();
+        while (!input.equals(Variables.DONE)){
+            usersArea.append("\n"+input);
+            count++;
+            input = in.readLine();
+        }
+
+        JLabel users = new JLabel("Todos os utilizadores: " + count);
+
+        JLabel l = new JLabel("Adicionar um amigo");
+        JTextField username = new JTextField("Username");
+        JButton add = new JButton("Adicionar");
+
+        add.addActionListener(e -> {
+            out.println(Variables.ADD_FRIEND);
+            out.println(username.getText());
+            try {
+                if(in.readLine().equals(Variables.DONE)){
+                    JOptionPane.showMessageDialog(frame, "Amigo adicionado");
+                    friendsArea.append("\n" + username.getText());
+                    friends.setText("Amigos: " + this.driver.getFriends().size());
+                    updateDriverInfo();
+                }
+                else {
+                    JOptionPane.showMessageDialog(frame, "Erro a adicionar amigo");
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
+
+        panel.add(friends);
+        panel.add(friendsArea);
+        panel.add(users);
+        panel.add(usersArea);
+        panel.add(l);
+        panel.add(username);
+        panel.add(add);
+        frame.add(panel,BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
+        frame.repaint();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
+
+    public void updateDriverInfo() throws IOException {
+        Gson gson = new Gson();
+        this.driver = gson.fromJson(in.readLine(), Driver.class);
+    }
+
+    private void GUIGroups() {
+
+        JFrame frame = new JFrame();
+        frame.setTitle("Grupos");
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0,1));
+
+        JLabel label = new JLabel("Lista de grupos: ");
+
+        panel.add(label);
+        frame.add(panel,BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
+        frame.repaint();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
+
+    private void GUIAlertas() {
+
+        JFrame frame = new JFrame();
+        frame.setTitle("Alertas");
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0,1));
+
+        JLabel label = new JLabel("Areas de alertas: ");
+
+        panel.add(label);
+        frame.add(panel,BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
+        frame.repaint();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
+
+    private void GUIAreaCircundante() {
+
+        JFrame frame = new JFrame();
+        frame.setTitle("Área Circundante");
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0,1));
+
+        JLabel label = new JLabel("Raio: " + this.driver.getRadiusLocalArea());
+
+        panel.add(label);
+        frame.add(panel,BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
+        frame.repaint();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
+
+    private void GUIChat() {
+
+        JFrame frame = new JFrame();
+        frame.setTitle("Chat");
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0,1));
+
+        JLabel label = new JLabel("Mensagens: ");
+
+        panel.add(label);
+        frame.add(panel,BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
+        frame.repaint();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    }
 
 
 

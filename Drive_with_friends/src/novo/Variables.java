@@ -8,7 +8,7 @@ public class Variables {
     protected static final String IP_MULTICAST_NORTE = "230.0.0.1";
 
     protected static final int PORT_MULTICAST_CENTRO = 2003;
-    protected static final String IP_MULTICAST_LISBOA = "230.0.0.2";
+    protected static final String IP_MULTICAST_CENTRO = "230.0.0.2";
 
     protected static final int PORT_MULTICAST_SUL = 2004;
     protected static final String IP_MULTICAST_SUL = "230.0.0.3";

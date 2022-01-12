@@ -61,7 +61,130 @@ public class InterfaceDriverThread extends Thread {
         }
     }
 
+    public void startDriverInterface() throws IOException {
+        System.out.println("Bem vindo" +
+                "\n---------" +
+                "\n 0 - Sair" +
+                "\n 1 - Login" +
+                "\n 2 - SIngUp" +
+                "\n" +
+                "\n Escolha a opção:");
 
+        input = scanner.nextLine();
+
+        switch (input){
+            case "0":
+                break;
+            case "1":
+                login();
+            case "2":
+                singUp();
+        }
+
+    }
+
+    public void login() throws IOException {
+        out.println(Variables.LOGIN);
+        System.out.print("Username: ");
+        out.println(scanner.nextLine());
+        System.out.print("\nPassword");
+        out.println(scanner.nextLine());
+
+        String input = in.readLine();
+        System.out.println(input);
+
+        if (input.equals(Variables.VALID_LOGIN)) {
+            menu();
+        } else {
+            System.out.println("Dados inválidos!");
+        }
+    }
+
+    public void singUp() throws IOException {
+        out.println(Variables.SINGUP);
+        System.out.println("Nome");
+        out.println(scanner.nextLine());
+        System.out.println("Username");
+        out.println(scanner.nextLine());
+        System.out.println("Password");
+        out.println(scanner.nextLine());
+
+        String answer = in.readLine();
+
+        switch (answer) {
+            case Variables.VALID_SINGUP:
+                menu();
+            case Variables.INVALID_SINGUP:
+                System.out.println("O username já está a ser utilizado!");
+                break;
+        }
+    }
+
+    public void updateDriverInfo() throws IOException {
+        Gson gson = new Gson();
+        this.driver = gson.fromJson(in.readLine(), Driver.class);
+    }
+
+    public void menu() throws IOException {
+        updateDriverInfo();
+        System.out.println("Login efetuado como " + this.driver.getUsername());
+
+        System.out.println("\n 0 - Sair" +
+                "\n 1 - Localização" +
+                "\n 2 - Amigos" +
+                "\n 3 - Alertas" +
+                "\n 4 - ");
+
+        input=scanner.nextLine();
+        switch (input){
+            case "1":
+                location();
+            case "2":
+            case "3":
+            case "4":
+        }
+    }
+
+    public void location() throws IOException {
+
+
+        boolean back = false;
+        while (!back){
+            System.out.println("A sua localização atual é: " + this.driver.getCurrentLocation());
+            System.out.println("-------------" +
+                    "\n 1 - Nova localização" +
+                    "\n 0 - Voltar");
+            input = scanner.nextLine();
+            switch (input){
+                case "0":
+                    back = true;
+                    break;
+                case "1":
+                    newLocation();
+            }
+        }
+    }
+
+    public void newLocation() throws IOException {
+        out.println(Variables.LOCATION);
+        out.println(Variables.NEW_LOCATION);
+        System.out.println("Introduza a\n latitude:");
+        String latit = scanner.nextLine();
+        out.println(latit);
+        System.out.println("longitude: ");
+        String longit = scanner.nextLine();
+        out.println(longit);
+        if(in.readLine().equals(Variables.VALID_LOCATION)){
+            System.out.println("Localização atualizada com sucesso");
+            this.driver.setCurrentLocation(Double.parseDouble(latit), Double.parseDouble(longit));
+        }
+        else {
+            System.out.println("Erro a alterar localização");
+        }
+
+    }
+
+    /**
     public void startDriverInterface() {
 
         JPanel loginPanel = new JPanel();
@@ -187,6 +310,7 @@ public class InterfaceDriverThread extends Thread {
         frame.add(loginPanel);
         frame.repaint();
         frame.setVisible(true);
+        frame.setResizable(true);
         frame.setPreferredSize(new Dimension(1200, 800));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
@@ -353,10 +477,7 @@ public class InterfaceDriverThread extends Thread {
 
     }
 
-    public void updateDriverInfo() throws IOException {
-        Gson gson = new Gson();
-        this.driver = gson.fromJson(in.readLine(), Driver.class);
-    }
+
 
     private void GUIGroups() {
 
@@ -429,6 +550,7 @@ public class InterfaceDriverThread extends Thread {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     }
+     */
 
 
 

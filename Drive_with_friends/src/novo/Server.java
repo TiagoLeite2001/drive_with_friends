@@ -54,7 +54,7 @@ public class Server {
 
         try { // Inicializar MulticastSocket para enviar os alertas recebidos para os do Centro
             socketCentro = new MulticastSocket(Variables.PORT_MULTICAST_CENTRO);
-            addressCentro = InetAddress.getByName(Variables.IP_MULTICAST_LISBOA);
+            addressCentro = InetAddress.getByName(Variables.IP_MULTICAST_CENTRO);
             socketCentro.joinGroup(addressCentro);
         } catch (IOException e) {
             System.out.println("Could not listen on port: " + Variables.PORT_MULTICAST_CENTRO);

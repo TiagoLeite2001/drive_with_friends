@@ -190,8 +190,44 @@ public class ServerDriverHandler extends Thread {
         }
     }
 
-    public void areaAlerts(){
+    public void areaAlerts() {
+        try {
+            String input = in.readLine();
+            if(input.equals("RADIUS")){
+                this.driver.setRadiusLocalArea(Double.parseDouble(in.readLine()));
+                out.println(Variables.DONE);
+            }
+            else {
+                input = in.readLine();
+                switch (input){
+                    case ("NORTH"):
+                        // Para aceder ao grupo multicast norte
+                        MulticastSocket sockeBroadcastNorth = new MulticastSocket(Variables.PORT_MULTICAST_NORTE);
+                        InetAddress groupAdressNorte = InetAddress.getByName(Variables.IP_MULTICAST_NORTE);
+                        sockeBroadcastNorth.joinGroup(groupAdressNorte);
+                        Thread threadBroadCastNorth = new Thread(new ThreadMulticast(sockeBroadcastNorth));
+                        threadBroadCastNorth.start();
 
+                    case ("CENTER"):
+                        MulticastSocket sockeBroadcastCenter = new MulticastSocket(Variables.PORT_MULTICAST_CENTRO);
+                        InetAddress groupAdressCenter = InetAddress.getByName(Variables.IP_MULTICAST_CENTRO);
+                        sockeBroadcastCenter.joinGroup(groupAdressCenter);
+                        Thread threadBroadCastCenter = new Thread(new ThreadMulticast(sockeBroadcastCenter));
+                        threadBroadCastCenter.start();
+                    case("SOUTH"):
+
+                        MulticastSocket sockeBroadcastSouth = new MulticastSocket(Variables.PORT_MULTICAST_SUL);
+                        InetAddress groupAdressSouth = InetAddress.getByName(Variables.IP_MULTICAST_SUL);
+                        sockeBroadcastSouth.joinGroup(groupAdressSouth);
+                        Thread threadBroadCastSouth = new Thread(new ThreadMulticast(sockeBroadcastSouth));
+                        threadBroadCastSouth.start();
+
+                }
+            }
+
+        }catch (Exception e){
+            out.println(Variables.ERROR);
+        }
     }
 
     public void sendAllUsers(){

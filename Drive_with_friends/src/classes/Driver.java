@@ -5,6 +5,8 @@ import others.Group;
 import helpers.Location;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -38,6 +40,8 @@ public class Driver implements Serializable{
     public Driver() {
 
     }
+
+
 
     public String getUsername() {
         return username;
@@ -97,6 +101,10 @@ public class Driver implements Serializable{
         this.currentLocation = currentLocation;
     }
 
+    public void startComunityMulticast(MulticastSocket ms, InetAddress ia){
+
+    }
+
     /**
     public void addAlertLocation(MulticastSocket multicastSocket) {
         this.alertsLocations.add(multicastSocket);
@@ -141,7 +149,7 @@ public class Driver implements Serializable{
 
         try {
             socketDriver = new Socket(Variables.IP_DRIVER, Variables.PORT_SERVER);
-            new InterfaceDriverThread(socketDriver).start();
+            new InterfaceDriver(socketDriver).start();
         } catch (IOException e) {
             System.err.println("Connection refused.");
         }

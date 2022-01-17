@@ -7,13 +7,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.Socket;
+import java.net.*;
 import java.util.Scanner;
 
-public class InterfaceDriverThread extends Thread {
+public class InterfaceDriver extends Thread {
     MulticastSocket socketBroadcast;
     InetAddress addressBroadcast;
 
@@ -26,14 +23,16 @@ public class InterfaceDriverThread extends Thread {
 
     Gson gson;
 
-    public InterfaceDriverThread(Socket socket) {
+    public InterfaceDriver(Socket socket) {
         try {
             this.socketBroadcast = new MulticastSocket(Variables.PORT_BROADCAST);
             this.addressBroadcast = InetAddress.getByName(Variables.IP_BROADCAST);
             this.socketBroadcast.joinGroup(this.addressBroadcast);
+
             this.socket = socket;
             this.out = new PrintWriter(socket.getOutputStream(), true);
             this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
             this.scanner = new Scanner(System.in);
             this.input = null;
             this.gson = new Gson();
@@ -50,7 +49,6 @@ public class InterfaceDriverThread extends Thread {
             out.println("DRIVER");
 
             //Connect to BRODCAST GROUP
-
             Thread broadcastThread = new Thread(new ThreadMulticast(socketBroadcast));
             broadcastThread.start();
 
@@ -145,7 +143,6 @@ public class InterfaceDriverThread extends Thread {
         System.out.println("Login efetuado como " + this.driver.getUsername());
 
         processIncomingMsg();
-        System.out.println("---149");
         newRequest();
     }
 
@@ -228,12 +225,23 @@ public class InterfaceDriverThread extends Thread {
         out.println(gson.toJson(r));
     }
 
-    public void msgToComunity() throws IOException {
+    //MSG PARA TODOS
+    public void msgToALL() throws IOException {
         System.out.println("Introduza a mensagem para a comunidade: ");
         String msg = this.driver.getUsername() + " : " + scanner.nextLine();
         DatagramPacket packetGroupMulticast = new DatagramPacket(msg.getBytes(),
                 msg.getBytes().length, this.addressBroadcast, Variables.PORT_BROADCAST);
         this.socketBroadcast.send(packetGroupMulticast);
+    }
+
+    public void msgToComunity() throws IOException {
+        System.out.println("Introduza a mensagem para a comunidade: ");
+        String msg = scanner.nextLine();
+
+        MsgToComunity mtc = new MsgToComunity(msg,this.driver.getCurrentLocation());
+        Request r = new Request(Variables.MSG_TO_COMUNITY, gson.toJson(mtc));
+
+        out.println(gson.toJson(r));
     }
 
     public void friends() {

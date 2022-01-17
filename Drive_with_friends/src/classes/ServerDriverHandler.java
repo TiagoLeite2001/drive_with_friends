@@ -44,6 +44,9 @@ public class ServerDriverHandler extends Thread {
     Gson gson;
     String request;
 
+    MulticastSocket socketMulticastComunity;
+    InetAddress groupAdressComunity;
+
     public ServerDriverHandler(Socket socketClient, MulticastSocket socketBroadcast,
                                MulticastSocket socketNorte, MulticastSocket socketCentro, MulticastSocket socketSul,
                                InetAddress addressBroadcast, InetAddress addressNorte, InetAddress addressCentro,
@@ -65,6 +68,9 @@ public class ServerDriverHandler extends Thread {
         this.drivers = drivers;
         this.driverShared = new SharedObject();
         this.gson = new Gson();
+
+        this.socketMulticastComunity = null;
+        this.groupAdressComunity = null;
     }
 
     @Override
@@ -75,10 +81,8 @@ public class ServerDriverHandler extends Thread {
         while (!login) {
             try {
                 String re = in.readLine();
-                System.out.println("re:" + re);
                 Request r = gson.fromJson(re, Request.class);
                 request = r.request;
-                System.out.println(request);
 
                 switch (request) {
                     case Variables.SINGUP:
@@ -123,6 +127,8 @@ public class ServerDriverHandler extends Thread {
 
                 Request r = gson.fromJson(srequest, Request.class);
                 request = r.request;
+
+                System.out.println("REuqest: " + request);
 
                 switch (request) {
                     case (Variables.LOCATION):
@@ -170,8 +176,6 @@ public class ServerDriverHandler extends Thread {
         this.driver = newDriver;
         drivers.add(newDriver);
 
-        System.out.println("nao passei");
-
         out.println(Variables.VALID_SINGUP);
 
         return true;
@@ -205,8 +209,28 @@ public class ServerDriverHandler extends Thread {
     }
 
     public void msgToComunity(MsgToComunity mtc) throws IOException {
-        DatagramPacket packetGroupMulticast = new DatagramPacket(mtc.msg.getBytes(), mtc.msg.getBytes().length, addressBroadcast, Variables.PORT_BROADCAST);
-        this.socketBroadcast.send(packetGroupMulticast);
+        int port = Variables.PORT_MULTICAST_COMUNITY++;
+        this.socketMulticastComunity = new MulticastSocket(port);
+        this.groupAdressComunity = InetAddress.getByName(Variables.IP_MULTICAST_COMUNITY + Variables.IP_MULTICAST_COMUNITY_VALUE++);
+
+        for (ServerDriverHandler sdh : driverHandlersList) {
+            if (sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1) {
+                System.out.println("km: " + sdh.driver.getCurrentLocation().distanceTo(mtc.location) );
+                sdh.socketMulticastComunity = this.socketMulticastComunity;
+                sdh.groupAdressComunity = this.groupAdressComunity;
+                sdh.socketMulticastComunity.joinGroup(groupAdressComunity);
+
+                Thread threadBroadCastComunity = new Thread(new ThreadMulticast(sdh.socketMulticastComunity));
+                threadBroadCastComunity.start();
+            }
+        }
+
+        String data = gson.toJson(mtc);
+
+        DatagramPacket packetGroupMulticastComunity = new DatagramPacket(data.getBytes(),
+                data.getBytes().length, groupAdressComunity, port);
+
+        this.socketBroadcast.send(packetGroupMulticastComunity);
     }
 
     public void msgToUser(Message m) throws IOException {

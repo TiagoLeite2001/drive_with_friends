@@ -13,6 +13,10 @@ public class Variables {
     public static final int PORT_MULTICAST_SUL = 2004;
     public static final String IP_MULTICAST_SUL = "230.0.0.3";
 
+    public static int PORT_MULTICAST_COMUNITY = 2005;
+    public static final String IP_MULTICAST_COMUNITY =  "230.0.0.";
+    public static int IP_MULTICAST_COMUNITY_VALUE = 5;
+
     public static final int PORT_SERVER = 2000;
 
     public static final String IP_DRIVER = "127.0.1.0";

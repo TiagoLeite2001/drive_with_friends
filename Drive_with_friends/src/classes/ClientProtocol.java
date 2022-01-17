@@ -1,6 +1,4 @@
-package novo;
-
-import tcp.Client;
+package classes;
 
 import java.io.BufferedReader;
 import java.io.IOException;

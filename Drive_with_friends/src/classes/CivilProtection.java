@@ -1,4 +1,4 @@
-package novo;
+package classes;
 
 public class CivilProtection {
 }

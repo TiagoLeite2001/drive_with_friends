@@ -1,6 +1,5 @@
-package novo;
+package classes;
 
-import others.AlertLocation;
 import others.Group;
 import others.Location;
 
@@ -16,7 +15,7 @@ public class Driver implements Serializable{
     private Location currentLocation;
     private ArrayList<Driver> friends;
     private ArrayList<Group> groups;
-    private ArrayList<AlertLocation> alertsLocations;
+    private ArrayList<String> alertsLocations;
     private double radiusLocalArea;
 
 
@@ -97,26 +96,25 @@ public class Driver implements Serializable{
         this.currentLocation = currentLocation;
     }
 
-    public ArrayList<AlertLocation> getAlertsLocations() {
+    /**
+    public void addAlertLocation(MulticastSocket multicastSocket) {
+        this.alertsLocations.add(multicastSocket);
+    }
+
+    public ArrayList<MulticastSocket> getAlertsLocations() {
         return alertsLocations;
     }
 
-    public void setAlertsLocations(ArrayList<AlertLocation> alertsLocations) {
+    public void setAlertsLocations(ArrayList<MulticastSocket> alertsLocations) {
         this.alertsLocations = alertsLocations;
     }
-
-    public void addAlertLocation(double latitude, double longitude, double radius) {
-        Location centerOfLocation = new Location(latitude, longitude);
-        AlertLocation alertLocation = new AlertLocation(centerOfLocation, radius);
-
-        this.alertsLocations.add(alertLocation);
-    }
+     */
 
     public double getRadiusLocalArea() {
         return radiusLocalArea;
     }
 
-    public void setRadiusLocalArea(double radiusLocalArea) {
+    public void setRadius(double radiusLocalArea) {
         this.radiusLocalArea = radiusLocalArea;
     }
 

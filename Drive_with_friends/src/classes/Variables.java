@@ -1,4 +1,4 @@
-package novo;
+package classes;
 
 public class Variables {
     protected static final int PORT_BROADCAST = 2001;
@@ -48,6 +48,14 @@ public class Variables {
     protected static final String DONE = "DONE";
 
     protected static final String ERROR = "ERROR";
+    protected static final String OK = "OK";
+
+    protected static final String MSG_TO_FRIEND = "MSG_TO_FRIEND";
+
+    protected static final String NEW_MSG = "NEW_MSG";
+
+
+
 
 
 

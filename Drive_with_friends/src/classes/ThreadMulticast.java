@@ -1,4 +1,4 @@
-package novo;
+package classes;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

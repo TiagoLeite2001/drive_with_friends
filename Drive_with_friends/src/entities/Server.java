@@ -1,6 +1,6 @@
 package entities;
 
-import novo.Driver;
+import classes.Driver;
 
 import java.io.IOException;
 import java.net.ServerSocket;

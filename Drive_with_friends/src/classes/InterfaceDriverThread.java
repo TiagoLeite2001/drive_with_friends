@@ -1,24 +1,21 @@
 package classes;
 
 import com.google.gson.Gson;
-import helpers.Login;
-import helpers.Request;
-import helpers.Singup;
+import helpers.*;
 
-import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
 public class InterfaceDriverThread extends Thread {
-    static JFrame frame = new JFrame("Drive With Friends");
-    static JPanel leftPanel = new JPanel();
-    static JPanel rightPanel = new JPanel();
+    MulticastSocket socketBroadcast;
+    InetAddress addressBroadcast;
 
     static Socket socket = null;
     public static BufferedReader in;
@@ -31,6 +28,9 @@ public class InterfaceDriverThread extends Thread {
 
     public InterfaceDriverThread(Socket socket) {
         try {
+            this.socketBroadcast = new MulticastSocket(Variables.PORT_BROADCAST);
+            this.addressBroadcast = InetAddress.getByName(Variables.IP_BROADCAST);
+            this.socketBroadcast.joinGroup(this.addressBroadcast);
             this.socket = socket;
             this.out = new PrintWriter(socket.getOutputStream(), true);
             this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -50,9 +50,7 @@ public class InterfaceDriverThread extends Thread {
             out.println("DRIVER");
 
             //Connect to BRODCAST GROUP
-            MulticastSocket socketBroadcast = new MulticastSocket(Variables.PORT_BROADCAST);
-            InetAddress groupAddress = InetAddress.getByName(Variables.IP_BROADCAST);
-            socketBroadcast.joinGroup(groupAddress);
+
             Thread broadcastThread = new Thread(new ThreadMulticast(socketBroadcast));
             broadcastThread.start();
 
@@ -74,7 +72,7 @@ public class InterfaceDriverThread extends Thread {
 
         input = scanner.nextLine();
 
-        switch (input){
+        switch (input) {
             case "0":
                 break;
             case "1":
@@ -98,8 +96,6 @@ public class InterfaceDriverThread extends Thread {
         out.println(gson.toJson(request));
 
         String input = in.readLine();
-
-        System.out.println("l94:" + input);
 
         if (input.equals(Variables.VALID_LOGIN)) {
             menu();
@@ -144,28 +140,103 @@ public class InterfaceDriverThread extends Thread {
     }
 
     public void menu() throws IOException {
+
         updateDriverInfo();
-        System.out.println("l:130");
         System.out.println("Login efetuado como " + this.driver.getUsername());
 
-        System.out.println("\n 0 - Sair" +
-                "\n 1 - Localização" +
-                "\n 2 - Amigos" +
-                "\n 3 - Alertas" +
-                "\n 4 - ");
+        processIncomingMsg();
+        System.out.println("---149");
+        newRequest();
+    }
 
-        input=scanner.nextLine();
-        switch (input){
-            case "1":
-                location();
-            case "2":
-                friends();
-            case "3":
-            case "4":
+    public void processIncomingMsg() {
+        new Thread(() -> {
+            while (socket.isConnected()) {
+                try {
+                    Request r = gson.fromJson(in.readLine(), Request.class);
+
+                    System.out.println(r.request);
+
+                    switch (r.request) {
+                        case Variables.OK:
+                            System.out.println("Concluido com sucesso");
+                            break;
+                        case Variables.ERROR:
+                            System.out.println("Erro");
+                        case Variables.MSG_FROM_FRIEND:
+                            System.out.println("Passei");
+                            Message m = gson.fromJson(r.msg, Message.class);
+                            System.out.println(m);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }).start();
+    }
+
+
+    public void newRequest() throws IOException {
+        boolean goOn = true;
+        while (goOn){
+            System.out.println("\n " +
+                    "0 - Sair" +
+                    "\n 1 - Localização" +
+                    "\n 2 - Amigos" +
+                    "\n 3 - Alertas" +
+                    "\n 4 - Mensagem para a comunidade" +
+                    "\n 5 - Mensagem para amigo");
+
+            input = scanner.nextLine();
+
+            switch (input) {
+                case "0":
+                    goOn = false;
+                    break;
+                case "1":
+                    location();
+                    break;
+                case "2":
+                    friends();
+                    break;
+                case "3":
+                    break;
+                case "4":
+                    msgToComunity();
+                    break;
+                case "5":
+                    msgToFriend();
+                    break;
+            }
         }
     }
 
-    public void friends(){
+    public void msgToFriend() {
+        System.out.println("");
+        System.out.println("Introduza o username do amigo:");
+        String username = scanner.nextLine();
+
+        System.out.println("");
+        System.out.println("Introduza a mensagem:");
+        String msg = scanner.nextLine();
+
+
+        Message m = new Message( this.driver.getUsername(),username, msg);
+        Request r = new Request(Variables.MSG_TO_FRIEND, gson.toJson(m));
+
+        out.println(gson.toJson(r));
+    }
+
+    public void msgToComunity() throws IOException {
+        System.out.println("Introduza a mensagem para a comunidade: ");
+        String msg = this.driver.getUsername() + " : " + scanner.nextLine();
+        DatagramPacket packetGroupMulticast = new DatagramPacket(msg.getBytes(),
+                msg.getBytes().length, this.addressBroadcast, Variables.PORT_BROADCAST);
+        this.socketBroadcast.send(packetGroupMulticast);
+    }
+
+    public void friends() {
         //Imprimir os amigos
 
         System.out.println("username para mandar msg");
@@ -182,44 +253,38 @@ public class InterfaceDriverThread extends Thread {
     public void location() throws IOException {
 
         boolean back = false;
-        while (!back){
+        while (!back) {
             System.out.println("A sua localização atual é: " + this.driver.getCurrentLocation());
             System.out.println("-------------" +
                     "\n 1 - Nova localização" +
                     "\n 0 - Voltar");
             input = scanner.nextLine();
-            switch (input){
+            switch (input) {
                 case "0":
                     back = true;
                     break;
                 case "1":
                     newLocation();
+                    break;
+                default:
+                    break;
             }
         }
     }
 
-    public void newLocation() throws IOException {
-
+    public void newLocation() {
         System.out.println("Introduza a latitude:");
         String latit = scanner.nextLine();
-
         System.out.println("Introduza a longitude: ");
         String longit = scanner.nextLine();
 
-        out.println(Variables.LOCATION);
-        out.println(latit);
-        out.println(longit);
+        Location l = new Location(Double.parseDouble(latit), Double.parseDouble(longit));
+        Request r = new Request(Variables.NEW_LOCATION, gson.toJson(l));
 
-        if(in.readLine().equals(Variables.VALID_LOCATION)){
-            System.out.println("Localização atualizada com sucesso");
-            this.driver.setCurrentLocation(Double.parseDouble(latit), Double.parseDouble(longit));
-        }
-        else {
-            System.out.println("Erro a alterar localização");
-        }
+        this.driver.setCurrentLocation(l);
 
+        out.println(gson.toJson(r));
     }
-
 
 
     public void closeEverything() {

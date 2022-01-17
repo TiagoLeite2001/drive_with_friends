@@ -1,7 +1,8 @@
 package classes;
 
+import helpers.Variables;
 import others.Group;
-import others.Location;
+import helpers.Location;
 
 import java.io.*;
 import java.net.Socket;
@@ -121,6 +122,7 @@ public class Driver implements Serializable{
     public boolean login(String password) {
         return this.password.equals(password);
     }
+
 
     @Override
     public boolean equals(Object o) {

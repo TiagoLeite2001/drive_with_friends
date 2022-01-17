@@ -1,5 +1,7 @@
 package classes;
 
+import helpers.Variables;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MulticastSocket;

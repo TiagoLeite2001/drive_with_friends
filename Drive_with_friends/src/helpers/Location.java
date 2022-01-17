@@ -1,4 +1,4 @@
-package others;
+package helpers;
 
 public class Location {
     private double longitude;

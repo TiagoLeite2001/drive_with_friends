@@ -133,7 +133,6 @@ public class InterfaceDriver extends Thread {
     public void updateDriverInfo() throws IOException {
         Gson gson = new Gson();
         String input = in.readLine();
-        System.out.println("140" + input);
         this.driver = gson.fromJson(input, Driver.class);
     }
 

@@ -208,18 +208,22 @@ public class ServerDriverHandler extends Thread {
         //this.driver.addGroup;
     }
 
+    public void msgToEveryone(MsgToComunity mtc) throws IOException {
+        DatagramPacket packetGroupMulticast = new DatagramPacket(mtc.msg.getBytes(), mtc.msg.getBytes().length, addressBroadcast, Variables.PORT_BROADCAST);
+        this.socketBroadcast.send(packetGroupMulticast);
+    }
+
     public void msgToComunity(MsgToComunity mtc) throws IOException {
         int port = Variables.PORT_MULTICAST_COMUNITY++;
-        this.socketMulticastComunity = new MulticastSocket(port);
-        this.groupAdressComunity = InetAddress.getByName(Variables.IP_MULTICAST_COMUNITY + Variables.IP_MULTICAST_COMUNITY_VALUE++);
+        MulticastSocket socketMulticastComunity = new MulticastSocket(port);
+        InetAddress groupAdressComunity = InetAddress.getByName(Variables.IP_MULTICAST_COMUNITY + Variables.IP_MULTICAST_COMUNITY_VALUE++);
 
         for (ServerDriverHandler sdh : driverHandlersList) {
-            if (sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1) {
+            if (!(sdh.driver == null) && !(sdh.driver.getUsername().equals(this.driver.getUsername()))&&(sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1)) {
                 System.out.println("km: " + sdh.driver.getCurrentLocation().distanceTo(mtc.location) );
-                sdh.socketMulticastComunity = this.socketMulticastComunity;
-                sdh.groupAdressComunity = this.groupAdressComunity;
+                sdh.socketMulticastComunity = socketMulticastComunity;
                 sdh.socketMulticastComunity.joinGroup(groupAdressComunity);
-
+                sdh.starThreadMulticastComunity();
                 Thread threadBroadCastComunity = new Thread(new ThreadMulticast(sdh.socketMulticastComunity));
                 threadBroadCastComunity.start();
             }
@@ -230,7 +234,12 @@ public class ServerDriverHandler extends Thread {
         DatagramPacket packetGroupMulticastComunity = new DatagramPacket(data.getBytes(),
                 data.getBytes().length, groupAdressComunity, port);
 
-        this.socketBroadcast.send(packetGroupMulticastComunity);
+        this.socketMulticastComunity.send(packetGroupMulticastComunity);
+    }
+
+    public void starThreadMulticastComunity(){
+        Thread broadcastThread = new Thread(new ThreadMulticast(this.socketMulticastComunity));
+        broadcastThread.start();
     }
 
     public void msgToUser(Message m) throws IOException {

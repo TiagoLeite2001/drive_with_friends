@@ -1,5 +1,6 @@
 package classes;
 
+import helpers.Location;
 import helpers.Variables;
 
 import java.io.IOException;
@@ -73,8 +74,11 @@ public class Server {
         }
 
         Driver driver = new Driver("t","t", "t");
+        driver.setCurrentLocation(new Location(3.11,4.11));
+
         Driver driver2 = new Driver("driver 2","t2", "t");
         Driver driver3 = new Driver("ti","t3", "t");
+        driver3.setCurrentLocation(new Location(3.112,4.112));
         drivers.add(driver);
         drivers.add(driver2);
         drivers.add(driver3);

@@ -13,6 +13,6 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message from=" + from + ": " + msg + "\"";
+        return "Message from: " + from + ", " + msg + "\n";
     }
 }

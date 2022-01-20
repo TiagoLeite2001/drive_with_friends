@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Driver implements Serializable{
 
@@ -20,6 +21,7 @@ public class Driver implements Serializable{
     private ArrayList<Group> groups;
     private ArrayList<String> alertsLocations;
     private double radiusLocalArea;
+    private ConcurrentHashMap<String, String> messages;
 
 
     public Driver(String username, String name, String password) {
@@ -31,17 +33,26 @@ public class Driver implements Serializable{
         this.groups = new ArrayList<>();
         this.alertsLocations = new ArrayList<>();
         this.radiusLocalArea = 0;
-    }
-
-    public Driver(String username) {
-        this.username = username;
-    }
-
-    public Driver() {
-
+        this.messages = new ConcurrentHashMap<>();
     }
 
 
+    public ConcurrentHashMap<String, String> getMessages() {
+        return messages;
+    }
+
+    public String getMsgFromDriver(String driver){
+        return this.messages.get(driver);
+    }
+
+    public void addMsg(String driver, String msg){
+        String msg1 = this.messages.get(driver) + "\n " +  msg;
+        this.messages.put(driver, msg1);
+    }
+
+    public void setMessages(ConcurrentHashMap<String, String> messages) {
+        this.messages = messages;
+    }
 
     public String getUsername() {
         return username;

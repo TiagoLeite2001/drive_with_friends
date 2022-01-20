@@ -185,6 +185,7 @@ public class InterfaceDriver extends Thread {
                             break;
                         case Variables.SHARED:
                             this.sharedObject = gson.fromJson(r.msg, SharedObject.class);
+                            this.driver = this.sharedObject.getDriver(this.driver);
                             break;
                         case Variables.GROUP_JOIN:
                             joinGroup((gson.fromJson(r.msg, InetAddress.class)));
@@ -340,6 +341,7 @@ public class InterfaceDriver extends Thread {
                     "\n 1 - Para um amigo" +
                     "\n 2 - Para um grupo" +
                     "\n 3 - Para a comunidade" +
+                    "\n 4 - Ver mensagens de um amigo" +
                     "");
 
             input = scanner.nextLine();
@@ -357,6 +359,11 @@ public class InterfaceDriver extends Thread {
                     updateDriverInfo();
                     break;
                 case "3":
+                    updateDriverInfo();
+                    updateDriverInfo();
+                    break;
+                case "4":
+                    msgFromFriend();
                     updateDriverInfo();
                     break;
             }
@@ -449,6 +456,21 @@ public class InterfaceDriver extends Thread {
         Request r = new Request(Variables.MSG_TO_GROUP, gson.toJson(m));
 
         out.println(gson.toJson(r));
+    }
+
+    public void msgFromFriend(){
+        System.out.println("");
+        System.out.println("Introduza o username do amigo:");
+        String username = scanner.nextLine();
+
+        String msg = this.driver.getMsgFromDriver(username);
+
+        if (msg != null){
+            System.out.println(" Mensagens de " + username + "\n" + msg);
+        }
+        else {
+            System.out.println("Não foram encontradas mensagens desse utilizador");
+        }
     }
 
     public void msgToFriend() {

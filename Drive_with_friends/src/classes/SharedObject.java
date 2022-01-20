@@ -28,4 +28,9 @@ public class SharedObject {
     public ArrayList<Driver> getDrivers() {
         return driversList.getAll();
     }
+
+    public Driver getDriver(Driver driver){
+        int index = this.getDrivers().lastIndexOf(driver);
+        return this.getDrivers().get(index);
+    }
 }

@@ -305,10 +305,14 @@ public class DriverHandler extends Thread {
 
     public void msgToUser(Message m) throws IOException {
         for (DriverHandler sdh : driverHandlersList) {
-            System.out.println(sdh.driver.getUsername());
-            if (sdh.driver.getUsername().equals(m.to)) {
-                Request r = new Request(Variables.MSG_FROM_FRIEND, gson.toJson(m));
-                sdh.out.println(gson.toJson(r));
+            if (sdh.driver != null){
+                if (sdh.driver.getUsername().equals(m.to)) {
+
+                    sdh.driver.addMsg(m.from, m.msg);
+
+                    Request r = new Request(Variables.MSG_FROM_FRIEND, gson.toJson(m));
+                    sdh.out.println(gson.toJson(r));
+                }
             }
         }
     }

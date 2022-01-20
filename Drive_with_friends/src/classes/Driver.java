@@ -153,7 +153,6 @@ public class Driver implements Serializable{
         } catch (IOException e) {
             System.err.println("Connection refused.");
         }
-
     }
 
 }

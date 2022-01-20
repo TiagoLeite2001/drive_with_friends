@@ -12,7 +12,10 @@ import java.util.Scanner;
 
 public class InterfaceDriver extends Thread {
     MulticastSocket socketBroadcast;
+
     InetAddress addressBroadcast;
+
+    MulticastSocket socketMulticast;
 
     static Socket socket = null;
     public static BufferedReader in;
@@ -28,6 +31,8 @@ public class InterfaceDriver extends Thread {
             this.socketBroadcast = new MulticastSocket(Variables.PORT_BROADCAST);
             this.addressBroadcast = InetAddress.getByName(Variables.IP_BROADCAST);
             this.socketBroadcast.joinGroup(this.addressBroadcast);
+
+            this.socketMulticast = new MulticastSocket(Variables.PORT_MULTICAST);
 
             this.socket = socket;
             this.out = new PrintWriter(socket.getOutputStream(), true);
@@ -52,12 +57,26 @@ public class InterfaceDriver extends Thread {
             Thread broadcastThread = new Thread(new ThreadMulticast(socketBroadcast));
             broadcastThread.start();
 
+            //Connect to MUTICAST GROUP
+            Thread multicastThread = new Thread(new ThreadMulticast(socketMulticast));
+            broadcastThread.start();
+
             startDriverInterface();
 
         } catch (IOException ex1) {
             closeEverything();
         }
     }
+
+    public void joinGroup(InetAddress ip){
+        try {
+            this.socketBroadcast.joinGroup(ip);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
     public void startDriverInterface() throws IOException {
         System.out.println("Bem vindo" +

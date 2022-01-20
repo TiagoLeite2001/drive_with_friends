@@ -2,17 +2,15 @@ package classes;
 
 import com.google.gson.Gson;
 import helpers.*;
+import others.Group;
 
 import java.io.*;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.Socket;
+import java.net.*;
 import java.util.ArrayList;
 
-public class ServerDriverHandler extends Thread {
+public class DriverHandler extends Thread {
 
-    static ArrayList<ServerDriverHandler> driverHandlersList = new ArrayList<>();
+    static ArrayList<DriverHandler> driverHandlersList = new ArrayList<>();
 
     Socket socketDriver;
     BufferedReader in;
@@ -29,17 +27,7 @@ public class ServerDriverHandler extends Thread {
     InetAddress addressCentro;
     InetAddress addressSul;
 
-    SharedObject sharedObject;
-
-    SynchronizedArrayList<Driver> drivers;
-
     Driver driver = null;
-    SharedObject driverShared= null;
-
-    DatagramPacket packetBroadcast;
-    DatagramPacket packetMulticastNorte;
-    DatagramPacket packetMulticastCentro;
-    DatagramPacket packetMulticastSul;
 
     Gson gson;
     String request;
@@ -47,10 +35,12 @@ public class ServerDriverHandler extends Thread {
     MulticastSocket socketMulticastComunity;
     InetAddress groupAdressComunity;
 
-    public ServerDriverHandler(Socket socketClient, MulticastSocket socketBroadcast,
-                               MulticastSocket socketNorte, MulticastSocket socketCentro, MulticastSocket socketSul,
-                               InetAddress addressBroadcast, InetAddress addressNorte, InetAddress addressCentro,
-                               InetAddress addressSul, SharedObject sharedObject, SynchronizedArrayList<Driver> drivers)
+    SharedObject sharedObject;
+
+    public DriverHandler(Socket socketClient, MulticastSocket socketBroadcast,
+                         MulticastSocket socketNorte, MulticastSocket socketCentro, MulticastSocket socketSul,
+                         InetAddress addressBroadcast, InetAddress addressNorte, InetAddress addressCentro,
+                         InetAddress addressSul, SharedObject sharedObject)
             throws IOException {
         driverHandlersList.add(this);
         this.socketDriver = socketClient;
@@ -64,13 +54,12 @@ public class ServerDriverHandler extends Thread {
         this.addressNorte = addressNorte;
         this.addressCentro = addressCentro;
         this.addressSul = addressSul;
-        this.sharedObject = sharedObject;
-        this.drivers = drivers;
-        this.driverShared = new SharedObject();
         this.gson = new Gson();
 
         this.socketMulticastComunity = null;
         this.groupAdressComunity = null;
+
+        this.sharedObject = sharedObject;
     }
 
     @Override
@@ -143,8 +132,14 @@ public class ServerDriverHandler extends Thread {
                     case (Variables.ALL_USERS):
                         sendAllUsers();
                         break;
-                    case (Variables.GROUPS):
-                        addGroup(gson.fromJson(r.msg, AddGroup.class));
+                    case (Variables.GROUP_JOIN):
+                        joinGroup(gson.fromJson(r.msg, Group.class));
+                        break;
+                    case (Variables.GROUP_LEAVE):
+                        //leaveGroup(gson.fromJson(r.msg, Group.class));
+                        break;
+                    case (Variables.GROUP_CREATE):
+                        createGroup(gson.fromJson(r.msg, Group.class));
                         break;
                     case (Variables.ADD_FRIEND):
                         addFriend(gson.fromJson(r.msg, AddFriend.class));
@@ -164,7 +159,7 @@ public class ServerDriverHandler extends Thread {
 
     public boolean singUp(Singup s) throws IOException {
 
-        for (Object c : drivers.getAll()) {
+        for (Object c : this.sharedObject.getDrivers()) {
             Driver driver = (Driver) c;
             if (driver.getUsername().equals(s.username)) {
                 out.println(Variables.INVALID_SINGUP);
@@ -174,7 +169,8 @@ public class ServerDriverHandler extends Thread {
 
         Driver newDriver = new Driver(s.name, s.username, s.password);
         this.driver = newDriver;
-        drivers.add(newDriver);
+
+        this.sharedObject.addDriver(newDriver);
 
         out.println(Variables.VALID_SINGUP);
 
@@ -183,12 +179,11 @@ public class ServerDriverHandler extends Thread {
 
     public boolean login(Login login) throws IOException {
 
-        if (drivers.getAll().isEmpty()) {
+        if (this.sharedObject.getDrivers().isEmpty()) {
             out.println(Variables.INVALID_LOGIN);
             return false;
         }
-        for (Object c : drivers.getAll()) {
-
+        for (Object c : this.sharedObject.getDrivers()) {
             Driver driver = (Driver) c;
             if (driver.getUsername().equals(login.username)) {
                 if (driver.getPassword().equals(login.password)) {
@@ -204,8 +199,35 @@ public class ServerDriverHandler extends Thread {
         return false;
     }
 
-    public void addGroup(AddGroup ad){
-        //this.driver.addGroup;
+    public void joinGroup(Group group){
+        if(getGroup(group) != null){
+            //this.driver.
+        }
+    }
+
+    public void createGroup(Group group) throws UnknownHostException {
+        if(!existsGroup(group)){
+            InetAddress ip = InetAddress.getByName(Variables.IP_MULTICAST_COMUNITY + Variables.IP_MULTICAST_COMUNITY_VALUE++);
+            Group g = new Group(ip, group.getName());
+
+            this.sharedObject.addGroup(g);
+        }
+    }
+
+    public boolean existsGroup(Group group){
+        for (Object o : this.sharedObject.getGroups()) {
+            Group g = (Group) o;
+            if (g.getName().equals(group.getName())) {return true;}
+        }
+        return false;
+    }
+
+    public Group getGroup(Group group){
+        for (Object o : this.sharedObject.getGroups()) {
+            Group g = (Group) o;
+            if (g.getName().equals(group.getName())) {return g;}
+        }
+        return null;
     }
 
     public void msgToEveryone(MsgToComunity mtc) throws IOException {
@@ -218,7 +240,7 @@ public class ServerDriverHandler extends Thread {
         MulticastSocket socketMulticastComunity = new MulticastSocket(port);
         InetAddress groupAdressComunity = InetAddress.getByName(Variables.IP_MULTICAST_COMUNITY + Variables.IP_MULTICAST_COMUNITY_VALUE++);
 
-        for (ServerDriverHandler sdh : driverHandlersList) {
+        for (DriverHandler sdh : driverHandlersList) {
             if (!(sdh.driver == null) && !(sdh.driver.getUsername().equals(this.driver.getUsername()))&&(sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1)) {
                 System.out.println("km: " + sdh.driver.getCurrentLocation().distanceTo(mtc.location) );
                 sdh.socketMulticastComunity = socketMulticastComunity;
@@ -245,10 +267,9 @@ public class ServerDriverHandler extends Thread {
     public void msgToUser(Message m) throws IOException {
         System.out.println("Size" + driverHandlersList.size());
 
-        for (ServerDriverHandler sdh : driverHandlersList) {
+        for (DriverHandler sdh : driverHandlersList) {
             System.out.println(sdh.driver.getUsername());
             if (sdh.driver.getUsername().equals(m.to)) {
-
                 Request r = new Request(Variables.MSG_FROM_FRIEND, gson.toJson(m));
                 sdh.out.println(gson.toJson(r));
             }
@@ -257,10 +278,13 @@ public class ServerDriverHandler extends Thread {
 
     public void areaCircundante(AreaCircundante ac) {
         this.driver.setRadius(ac.radius);
+        out.println(Variables.AREA_CIRCUNDANTE_CHANGED);
     }
 
     public void location(Location location) {
         this.driver.setCurrentLocation(location);
+        out.println(Variables.VALID_LOCATION);
+
     }
 
     public void areaAlerts(AreaAlert al) {
@@ -295,8 +319,8 @@ public class ServerDriverHandler extends Thread {
     }
 
     public void sendAllUsers() {
-        if (!Server.drivers.getAll().isEmpty()) {
-            for (Object c : Server.drivers.getAll()) {
+        if (!this.sharedObject.getDrivers().isEmpty()) {
+            for (Object c : this.sharedObject.getDrivers()) {
                 Driver driver = (Driver) c;
                 out.println(driver.getUsername());
             }
@@ -308,8 +332,8 @@ public class ServerDriverHandler extends Thread {
         String username = ad.userToAdd;
         boolean found = false;
 
-        if (!Server.drivers.getAll().isEmpty()) {
-            for (Object c : Server.drivers.getAll()) {
+        if (!this.sharedObject.getDrivers().isEmpty()) {
+            for (Object c : this.sharedObject.getDrivers()) {
                 Driver driver = (Driver) c;
                 if (driver.getUsername().equals(username)) {
                     this.driver.addFriend(driver);

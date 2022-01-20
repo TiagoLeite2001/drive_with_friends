@@ -2,7 +2,11 @@ package helpers;
 
 public class Variables {
     public static final int PORT_BROADCAST = 2001;
+
     public static final String IP_BROADCAST = "230.0.0.4";
+
+    public static final int PORT_MULTICAST = 2006;
+
 
     public static final int PORT_MULTICAST_NORTE = 2002;
     public static final String IP_MULTICAST_NORTE = "230.0.0.1";
@@ -43,12 +47,17 @@ public class Variables {
     public static final String AREA_ALERTS = "AREA_ALERTS";
 
     public static final String AREA_CIRCUNDANTE = "CIRCUNC_ALERTS";
+    public static final String AREA_CIRCUNDANTE_CHANGED = "AREA_CIRCUNDANTE_CHANGED";
 
     public static final String FRIENDS = "FRIENDS";
     public static final String ADD_FRIEND = "ADD_FRIEND";
     public static final String ALL_USERS = "ALL_USERS";
 
     public static final String GROUPS = "GROUPS";
+    public static final String GROUP_JOIN = "GROUP_JOIN";
+    public static final String GROUP_LEAVE = "GROUP_LEAVE";
+    public static final String GROUP_CREATE = "GROUP_CREATE";
+
     public static final String DONE = "DONE";
 
     public static final String ERROR = "ERROR";

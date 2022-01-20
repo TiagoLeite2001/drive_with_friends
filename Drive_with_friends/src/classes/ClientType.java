@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
-public class ClientProtocol {
+public class ClientType {
     String clientType;
     BufferedReader bufferedReader;
 
-    public ClientProtocol(Socket socket){
+    public ClientType(Socket socket){
         try {
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.clientType = bufferedReader.readLine();

@@ -2,34 +2,33 @@ package classes;
 
 import helpers.Location;
 import helpers.Variables;
+import others.Group;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 
 public class Server {
-    static SynchronizedArrayList<Driver> drivers = new SynchronizedArrayList<>();
-    public static void main(String[] args) throws IOException {
 
+    static SharedObject sharedObject = new SharedObject();
 
-        ServerSocket serverSocket = null;
+    ServerSocket serverSocket = null;
 
-        MulticastSocket socketBroadcast = null;
-        MulticastSocket socketNorte = null;
-        MulticastSocket socketSul = null;
-        MulticastSocket socketCentro = null;
+    MulticastSocket socketBroadcast = null;
+    MulticastSocket socketNorte = null;
+    MulticastSocket socketSul = null;
+    MulticastSocket socketCentro = null;
 
-        InetAddress addressBroadcast = null;
-        InetAddress addressNorte = null;
-        InetAddress addressCentro = null;
-        InetAddress addressSul = null;
+    InetAddress addressBroadcast = null;
+    InetAddress addressNorte = null;
+    InetAddress addressCentro = null;
+    InetAddress addressSul = null;
 
-        SharedObject sharedObject = null;
+    public Server(){
+        this.start();
+    }
 
-
-        try { // Inicializar ServerSocket para os Clients
+    public void start(){
+        try {
             serverSocket = new ServerSocket(Variables.PORT_SERVER);
         } catch (IOException e) {
             System.out.println("Could not listen on port: " + Variables.PORT_SERVER);
@@ -79,9 +78,21 @@ public class Server {
         Driver driver2 = new Driver("driver 2","t2", "t");
         Driver driver3 = new Driver("ti","t3", "t");
         driver3.setCurrentLocation(new Location(3.112,4.112));
-        drivers.add(driver);
-        drivers.add(driver2);
-        drivers.add(driver3);
+        sharedObject.addDriver(driver);
+        sharedObject.addDriver(driver2);
+        sharedObject.addDriver(driver3);
+
+        try {
+            Group group1 = new Group(InetAddress.getByName("230.10.1.2"), "grupo 1");
+            Group group2 = new Group(InetAddress.getByName("230.10.1.3"), "grupo 2");
+            Group group3 = new Group(InetAddress.getByName("230.10.1.4"), "grupo 3");
+
+            sharedObject.addGroup(group1);
+            sharedObject.addGroup(group2);
+            sharedObject.addGroup(group3);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
 
         System.out.println("Server waiting for connection.");
 
@@ -89,15 +100,15 @@ public class Server {
             while (!serverSocket.isClosed()) {
                 Socket socketClient = serverSocket.accept();
                 System.out.println("User connect");
-                String clientType = new ClientProtocol(socketClient).getClientType();
+                String clientType = new ClientType(socketClient).getClientType();
 
                 switch (clientType) {
                     case Variables.DRIVER:
                         System.out.println("Passei aqui");
-                        new ServerDriverHandler(socketClient, socketBroadcast,
+                        new DriverHandler(socketClient, socketBroadcast,
                                 socketNorte, socketCentro, socketSul,
                                 addressBroadcast, addressNorte, addressCentro,
-                                addressSul, sharedObject, drivers).start();
+                                addressSul, sharedObject).start();
                         break;
                     case Variables.PC:
                         //new ServidorThreadPC(socket, objSharing, serverSocketMulticast,serverSocketMulticastL,serverSocketBroadcast, groupAddress,groupAddressB,groupAddressL, PC).start();
@@ -112,14 +123,22 @@ public class Server {
             e.printStackTrace();
         }
 
-        socketBroadcast.leaveGroup(addressBroadcast);
-        socketBroadcast.close();
-        socketNorte.leaveGroup(addressNorte);
-        socketNorte.close();
-        socketCentro.leaveGroup(addressCentro);
-        socketCentro.close();
-        socketSul.leaveGroup(addressSul);
-        socketSul.close();
+        try {
+            socketBroadcast.leaveGroup(addressBroadcast);
+            socketBroadcast.close();
+            socketNorte.leaveGroup(addressNorte);
+            socketNorte.close();
+            socketCentro.leaveGroup(addressCentro);
+            socketCentro.close();
+            socketSul.leaveGroup(addressSul);
+            socketSul.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+    }
+
+    public static void main(String[] args) throws IOException {
+        Server server = new Server();
     }
 }

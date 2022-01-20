@@ -55,6 +55,10 @@ public class Variables {
 
     public static final String GROUPS = "GROUPS";
     public static final String GROUP_JOIN = "GROUP_JOIN";
+    public static final String GROUP_JOINED = "GROUP_JOINED";
+
+    public static final String GROUP_ERROR = "GROUP_ERROR";
+
     public static final String GROUP_LEAVE = "GROUP_LEAVE";
     public static final String GROUP_CREATE = "GROUP_CREATE";
 
@@ -66,8 +70,17 @@ public class Variables {
     public static final String MSG_TO_FRIEND = "MSG_TO_FRIEND";
     public static final String MSG_FROM_FRIEND = "MSG_FROM_FRIEND";
 
+    public static final String MSG_TO_GROUP = "MSG_TO_GROUP";
+    public static final String MSG_FROM_GROUP = "MSG_FROM_GROUP";
+
     public static final String NEW_MSG = "NEW_MSG";
 
     public static final String MSG_TO_COMUNITY = "MSG_TO_COMUNITY";
+
+    public static final String SHARED = "SHARED";
+
+    public static final String RESPONSE = "RESPONSE";
+
+    public static final String UPDATE = "UPDATE";
 
 }

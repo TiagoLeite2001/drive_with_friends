@@ -1,6 +1,9 @@
 package others;
 
+import classes.Driver;
+
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 public class Group {
     private InetAddress ip;
@@ -13,6 +16,10 @@ public class Group {
 
     public Group(String name){
         this.name =  name;
+    }
+
+    public String getIpS() {
+        return ip.getHostName();
     }
 
     public InetAddress getIp() {

@@ -93,6 +93,18 @@ public class Driver implements Serializable{
         return groups;
     }
 
+    public void addGroup(Group group) {
+        this.groups.add(group);
+    }
+
+    public void leaveGroup(Group group) {
+        this.groups.remove(group);
+    }
+
+    public boolean containsGroup(Group group){
+        return this.groups.contains(group);
+    }
+
     public void setGroups(ArrayList<Group> groups) {
         this.groups = groups;
     }

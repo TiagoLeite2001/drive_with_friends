@@ -270,11 +270,16 @@ public class UserHandler extends Thread {
         InetAddress address = InetAddress.getByName(ip);
 
         for (UserHandler sdh : driverHandlersList) {
-            if (!(sdh.driver == null) && !(sdh.driver.getUsername().equals(this.driver.getUsername())) && (sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1)) {
-                System.out.println("km: " + sdh.driver.getCurrentLocation().distanceTo(mtc.location));
+            if(!(sdh.driver == null)){
+                if ((!(sdh.driver.getUsername().equals(this.driver.getUsername())) &&
+                        (sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1))||
+                        (!(sdh.driver.getUsername().equals(this.driver.getUsername())) &&
+                                (sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= sdh.driver.getRadiusLocalArea()))) {
+                    //System.out.println("km: " + sdh.driver.getCurrentLocation().distanceTo(mtc.location));
 
-                Request r = new Request(Variables.GROUP_JOIN_COMMUNITY, ip);
-                sdh.out.println(gson.toJson(r));
+                    Request r = new Request(Variables.GROUP_JOIN_COMMUNITY, ip);
+                    sdh.out.println(gson.toJson(r));
+                }
             }
         }
 

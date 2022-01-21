@@ -203,7 +203,6 @@ public class InterfaceDriver extends Thread {
             while (socket.isConnected()) {
                 try {
                     String s = in.readLine();
-                    System.out.println(s);
                     Request r = gson.fromJson(s, Request.class);
 
                     switch (r.request) {

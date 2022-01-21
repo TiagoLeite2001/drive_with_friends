@@ -1,30 +1,16 @@
 package helpers;
 
 public class Variables {
-    public static final int PORT_BROADCAST = 2001;
-
-    public static final String IP_BROADCAST = "230.0.0.4";
-
+    public static final String IP_MULTICAST = "230.0.0.4";
     public static final int PORT_MULTICAST = 2006;
 
-
-    public static final int PORT_MULTICAST_NORTE = 2002;
     public static final String IP_MULTICAST_NORTE = "230.0.0.1";
-
-    public static final int PORT_MULTICAST_CENTRO = 2003;
     public static final String IP_MULTICAST_CENTRO = "230.0.0.2";
-
-    public static final int PORT_MULTICAST_SUL = 2004;
     public static final String IP_MULTICAST_SUL = "230.0.0.3";
-
-    public static int PORT_MULTICAST_COMUNITY = 2005;
-    public static final String IP_MULTICAST_COMUNITY =  "230.0.0.";
-    public static int IP_MULTICAST_COMUNITY_VALUE = 5;
 
     public static final int PORT_SERVER = 2000;
 
-    public static final String IP_DRIVER = "127.0.1.0";
-    public static final String IP_PROTECAO_CIVIL = "127.0.1.1";
+    public static final String IP_USER = "127.0.1.0";
 
     public static final String LOGIN = "LOGIN";
     public static final String VALID_LOGIN = "VALID_LOGIN";
@@ -35,52 +21,33 @@ public class Variables {
     public static final String INVALID_SINGUP = "INVALID_LOGIN";
 
     public static final String LOCATION = "LOCATION";
-    public static final String NEW_LOCATION = "NEW_LOCATION";
-    public static final String VALID_LOCATION = "VALID_LOCATION";
-    public static final String INVALID_LOCATION = "INVALID_LOCATION";
+
 
     public static final String DRIVER = "DRIVER";
     public static final String PC = "PROTECAO_CIVIL";
 
-    public static final String BACK = "BACK";
 
     public static final String AREA_ALERTS = "AREA_ALERTS";
 
     public static final String AREA_CIRCUNDANTE = "CIRCUNC_ALERTS";
-    public static final String AREA_CIRCUNDANTE_CHANGED = "AREA_CIRCUNDANTE_CHANGED";
 
-    public static final String FRIENDS = "FRIENDS";
     public static final String ADD_FRIEND = "ADD_FRIEND";
-    public static final String ALL_USERS = "ALL_USERS";
 
-    public static final String GROUPS = "GROUPS";
     public static final String GROUP_JOIN = "GROUP_JOIN";
-    public static final String GROUP_JOINED = "GROUP_JOINED";
-
-    public static final String GROUP_ERROR = "GROUP_ERROR";
+    public static final String GROUP_JOIN_COMMUNITY = "GROUP_JOIN_COMMUNITY";
 
     public static final String GROUP_LEAVE = "GROUP_LEAVE";
     public static final String GROUP_CREATE = "GROUP_CREATE";
 
-    public static final String DONE = "DONE";
-
-    public static final String ERROR = "ERROR";
-    public static final String OK = "OK";
-
     public static final String MSG_TO_FRIEND = "MSG_TO_FRIEND";
     public static final String MSG_FROM_FRIEND = "MSG_FROM_FRIEND";
-
     public static final String MSG_TO_GROUP = "MSG_TO_GROUP";
-    public static final String MSG_FROM_GROUP = "MSG_FROM_GROUP";
-
-    public static final String NEW_MSG = "NEW_MSG";
-
     public static final String MSG_TO_COMUNITY = "MSG_TO_COMUNITY";
+    public static final String MSG_TO_LOCATION = "MSG_TO_LOCATION";
 
     public static final String SHARED = "SHARED";
 
     public static final String RESPONSE = "RESPONSE";
 
-    public static final String UPDATE = "UPDATE";
 
 }

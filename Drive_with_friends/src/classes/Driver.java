@@ -1,7 +1,6 @@
 package classes;
 
 import helpers.Variables;
-import others.Group;
 import helpers.Location;
 
 import java.io.*;
@@ -17,7 +16,7 @@ public class Driver implements Serializable{
     private String name;
     private String password;
     private Location currentLocation;
-    private ArrayList<Driver> friends;
+    private ArrayList<String> friends;
     private ArrayList<Group> groups;
     private ArrayList<String> alertsLocations;
     private double radiusLocalArea;
@@ -32,7 +31,7 @@ public class Driver implements Serializable{
         this.friends = new ArrayList<>();
         this.groups = new ArrayList<>();
         this.alertsLocations = new ArrayList<>();
-        this.radiusLocalArea = 0;
+        this.radiusLocalArea = 5;
         this.messages = new ConcurrentHashMap<>();
     }
 
@@ -88,15 +87,15 @@ public class Driver implements Serializable{
         this.currentLocation = currentLocation;
     }
 
-    public ArrayList<Driver> getFriends() {
+    public ArrayList<String> getFriends() {
         return friends;
     }
 
-    public void addFriend(Driver friend) {
+    public void addFriend(String friend) {
         this.friends.add(friend);
     }
 
-    public void setFriends(ArrayList<Driver> friends) {
+    public void setFriends(ArrayList<String> friends) {
         this.friends = friends;
     }
 
@@ -128,19 +127,13 @@ public class Driver implements Serializable{
 
     }
 
-    /**
-    public void addAlertLocation(MulticastSocket multicastSocket) {
-        this.alertsLocations.add(multicastSocket);
+    public boolean addAlertLocation(String al){
+        if(!this.alertsLocations.contains(al)){
+            this.alertsLocations.add(al);
+            return true;
+        }
+        return false;
     }
-
-    public ArrayList<MulticastSocket> getAlertsLocations() {
-        return alertsLocations;
-    }
-
-    public void setAlertsLocations(ArrayList<MulticastSocket> alertsLocations) {
-        this.alertsLocations = alertsLocations;
-    }
-     */
 
     public double getRadiusLocalArea() {
         return radiusLocalArea;
@@ -171,7 +164,7 @@ public class Driver implements Serializable{
         Socket socketDriver;
 
         try {
-            socketDriver = new Socket(Variables.IP_DRIVER, Variables.PORT_SERVER);
+            socketDriver = new Socket(Variables.IP_USER, Variables.PORT_SERVER);
             new InterfaceDriver(socketDriver).start();
         } catch (IOException e) {
             System.err.println("Connection refused.");

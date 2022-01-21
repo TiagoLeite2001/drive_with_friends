@@ -8,4 +8,11 @@ public class MsgToComunity {
         this.msg = msg;
         this.location = location;
     }
+
+    @Override
+    public String toString() {
+        return "  Mensagem da comunidade: " +
+                " " + msg + '\'' +
+                ", localização:" + location;
+    }
 }

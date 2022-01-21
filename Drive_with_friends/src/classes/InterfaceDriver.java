@@ -2,7 +2,6 @@ package classes;
 
 import com.google.gson.Gson;
 import helpers.*;
-import others.Group;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,6 +11,12 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+
+import static java.util.concurrent.TimeUnit.HOURS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class InterfaceDriver extends Thread {
     private MulticastSocket socketBroadcast;
@@ -30,10 +35,12 @@ public class InterfaceDriver extends Thread {
 
     private SharedObject sharedObject;
 
+    ScheduledExecutorService scheduler;
+
     public InterfaceDriver(Socket socket) {
         try {
-            this.socketBroadcast = new MulticastSocket(Variables.PORT_BROADCAST);
-            this.addressBroadcast = InetAddress.getByName(Variables.IP_BROADCAST);
+            this.socketBroadcast = new MulticastSocket(Variables.PORT_MULTICAST);
+            this.addressBroadcast = InetAddress.getByName(Variables.IP_MULTICAST);
             this.socketBroadcast.joinGroup(addressBroadcast);
 
             this.socket = socket;
@@ -43,6 +50,8 @@ public class InterfaceDriver extends Thread {
             this.scanner = new Scanner(System.in);
             this.input = null;
             this.gson = new Gson();
+
+            this.scheduler = Executors.newScheduledThreadPool(1);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -53,7 +62,7 @@ public class InterfaceDriver extends Thread {
     public void run() {
         super.run();
         try {
-            this.out.println("DRIVER");
+            this.out.println(Variables.DRIVER);
 
             Thread broadcastThread = new Thread(new ThreadMulticast(socketBroadcast));
             broadcastThread.start();
@@ -66,34 +75,37 @@ public class InterfaceDriver extends Thread {
     }
 
     public void startDriverInterface() throws IOException {
-        System.out.println("Bem vindo" +
-                "\n---------" +
-                "\n 0 - Sair" +
-                "\n 1 - Login" +
-                "\n 2 - SIngUp" +
-                "\n" +
-                "\n Escolha a opção:");
+        boolean login =false;
 
-        this.input = this.scanner.nextLine();
+        while(!login){
+            System.out.println("Bem vindo" +
+                    "\n" +
+                    "\n 0 - Sair" +
+                    "\n 1 - Login" +
+                    "\n 2 - SIngUp" +
+                    "\n" +
+                    "\n");
+            this.input = this.scanner.nextLine();
 
-        switch (this.input) {
-            case "0":
-                break;
-            case "1":
-                login();
-                break;
-            case "2":
-                singUp();
-                break;
+            switch (this.input) {
+                case "0":
+                    break;
+                case "1":
+                    login = login();
+                    break;
+                case "2":
+                    login = singUp();
+                    break;
+            }
         }
-
+        menu();
     }
 
-    public void login() throws IOException {
+    public boolean login() throws IOException {
         System.out.print("Username: ");
         String username = this.scanner.nextLine();
 
-        System.out.print("\nPassword");
+        System.out.print("Password:");
         String pass = this.scanner.nextLine();
 
         Login l = new Login(username, pass);
@@ -104,13 +116,14 @@ public class InterfaceDriver extends Thread {
         String input = this.in.readLine();
 
         if (input.equals(Variables.VALID_LOGIN)) {
-            menu();
+            return true;
         } else {
             System.out.println("Dados inválidos!");
         }
+        return false;
     }
 
-    public void singUp() throws IOException {
+    public boolean singUp() throws IOException {
         System.out.println("Nome");
         String name = scanner.nextLine();
 
@@ -126,30 +139,45 @@ public class InterfaceDriver extends Thread {
         out.println(gson.toJson(request));
 
         String answer = in.readLine();
-        System.out.println("l129 " + answer);
 
         switch (answer) {
-
             case Variables.VALID_SINGUP:
-                menu();
+                return true;
             case Variables.INVALID_SINGUP:
                 System.out.println("O username já está a ser utilizado!");
-                break;
+                return false;
         }
+        return false;
     }
 
-    public void joinGroup(InetAddress ip) {
+    public void joinGroup(String ip) {
         try {
-            this.socketBroadcast.joinGroup(ip);
+            this.socketBroadcast.joinGroup(InetAddress.getByName(ip));
             System.out.println("Adicionado ao grupo");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    public void joinGroupC(String ip) {
+        try {
+            this.socketBroadcast.joinGroup(InetAddress.getByName(ip));
+        } catch (IOException e) {
+        }
+    }
+
     public void getDriverInfo() throws IOException {
         String input = in.readLine();
         this.driver = gson.fromJson(input, Driver.class);
+    }
+
+    public void startBroadcastGroupsAndAlertsLocations() throws IOException {
+        ArrayList<Group> groups = this.driver.getGroups();
+        if(this.driver.getGroups().size() > 0){
+            for (Group g:groups) {
+                this.socketBroadcast.joinGroup(g.getIp());
+            }
+        }
     }
 
     public void updateDriverInfo() {
@@ -159,6 +187,8 @@ public class InterfaceDriver extends Thread {
 
     public void menu() throws IOException {
         getDriverInfo();
+        startBroadcastGroupsAndAlertsLocations();
+
         System.out.println("Login efetuado como " + this.driver.getUsername());
 
         Request r = new Request(Variables.SHARED, "");
@@ -173,22 +203,30 @@ public class InterfaceDriver extends Thread {
             while (socket.isConnected()) {
                 try {
                     String s = in.readLine();
+                    System.out.println(s);
                     Request r = gson.fromJson(s, Request.class);
 
                     switch (r.request) {
                         case Variables.RESPONSE:
                             System.out.println(r.msg);
+                            updateDriverInfo();
                             break;
                         case Variables.MSG_FROM_FRIEND:
                             Message m = gson.fromJson(r.msg, Message.class);
                             System.out.println(m.toString());
+                            updateDriverInfo();
                             break;
                         case Variables.SHARED:
                             this.sharedObject = gson.fromJson(r.msg, SharedObject.class);
                             this.driver = this.sharedObject.getDriver(this.driver);
                             break;
                         case Variables.GROUP_JOIN:
-                            joinGroup((gson.fromJson(r.msg, InetAddress.class)));
+                            joinGroup(r.msg);
+                            updateDriverInfo();
+                            break;
+                        case Variables.GROUP_JOIN_COMMUNITY:
+                            joinGroupC(r.msg);
+                            updateDriverInfo();
                             break;
                     }
                 } catch (IOException e) {
@@ -200,10 +238,11 @@ public class InterfaceDriver extends Thread {
 
 
     public void newRequest() throws IOException {
+
         boolean goOn = true;
         while (goOn) {
             System.out.println("\n " +
-                    "0 - Sair" +
+                    "\n0 - Sair" +
                     "\n 1 - Localização" +
                     "\n 2 - Amigos" +
                     "\n 3 - Alertas" +
@@ -240,13 +279,14 @@ public class InterfaceDriver extends Thread {
                     break;
             }
         }
+        System.exit(-1);
     }
 
     public void alerts() throws IOException {
         boolean goOn = true;
         while (goOn) {
             System.out.println("\n " +
-                    " Alertas" +
+                    "\n Alertas" +
                     "\n 0 - Sair" +
                     "\n 1 - Adicionar localização" +
                     "\n 2 - Remover localização" +
@@ -257,6 +297,7 @@ public class InterfaceDriver extends Thread {
             switch (this.input) {
                 case "0":
                     goOn = false;
+                    updateDriverInfo();
                     break;
                 case "1":
                     addAlert();
@@ -273,9 +314,9 @@ public class InterfaceDriver extends Thread {
     public void addAlert() throws IOException {
         System.out.println("\n Adicionar uma localização aos alertas");
         System.out.println("\n  Localizações disponiveis:" +
-                "\nNorte" +
-                "\nCentro" +
-                "\nSul");
+                "\n Norte" +
+                "\n Centro" +
+                "\n Sul");
         System.out.println("\n Introduza a localização: ");
 
         this.input = scanner.nextLine().toUpperCase(Locale.ROOT);
@@ -283,21 +324,38 @@ public class InterfaceDriver extends Thread {
         switch (this.input) {
             case "NORTE":
                 this.socketBroadcast.joinGroup(InetAddress.getByName(Variables.IP_MULTICAST_NORTE));
-                addedLocation(input);
+                if(this.driver.addAlertLocation(input)){
+                    addedLocation(input);
+                }
+                else {
+                    System.out.println("A localização já nos seus alertas");
+                }
                 break;
             case "CENTRO":
                 this.socketBroadcast.joinGroup(InetAddress.getByName(Variables.IP_MULTICAST_CENTRO));
-                addedLocation(input);
-                break;
+                this.driver.addAlertLocation(input);
+                if(this.driver.addAlertLocation(input)){
+                    addedLocation(input);
+                }
+                else {
+                    System.out.println("A localização já nos seus alertas");
+                }
             case "SUL":
                 this.socketBroadcast.joinGroup(InetAddress.getByName(Variables.IP_MULTICAST_SUL));
-                addedLocation(input);
-                break;
+                this.driver.addAlertLocation(input);
+                if(this.driver.addAlertLocation(input)){
+                    addedLocation(input);
+                }
+                else {
+                    System.out.println("A localização já nos seus alertas");
+                }
             default:break;
         }
     }
 
     public void addedLocation(String l){
+        Request r = new Request(Variables.AREA_ALERTS, l);
+        out.println(gson.toJson(r));
         System.out.println(" Alertas do " + l + " adicionados.");
     }
 
@@ -316,19 +374,20 @@ public class InterfaceDriver extends Thread {
         this.input = scanner.nextLine().toUpperCase(Locale.ROOT);
 
         switch (this.input) {
-            case "NORTE":
+            case "NORTE" -> {
                 this.socketBroadcast.leaveGroup(InetAddress.getByName(Variables.IP_MULTICAST_NORTE));
                 removedLocation(input);
-                break;
-            case "CENTRO":
+            }
+            case "CENTRO" -> {
                 this.socketBroadcast.leaveGroup(InetAddress.getByName(Variables.IP_MULTICAST_CENTRO));
                 removedLocation(input);
-                break;
-            case "SUL":
+            }
+            case "SUL" -> {
                 this.socketBroadcast.leaveGroup(InetAddress.getByName(Variables.IP_MULTICAST_SUL));
                 removedLocation(input);
-                break;
-            default:break;
+            }
+            default -> {
+            }
         }
     }
 
@@ -347,25 +406,26 @@ public class InterfaceDriver extends Thread {
             input = scanner.nextLine();
 
             switch (input) {
-                case "0":
+                case "0" -> {
                     goOn = false;
-                    break;
-                case "1":
+                    updateDriverInfo();
+                }
+                case "1" -> {
                     msgToFriend();
                     updateDriverInfo();
-                    break;
-                case "2":
+                }
+                case "2" -> {
                     msgToGroup();
                     updateDriverInfo();
-                    break;
-                case "3":
+                }
+                case "3" -> {
+                    msgToComunity();
                     updateDriverInfo();
-                    updateDriverInfo();
-                    break;
-                case "4":
+                }
+                case "4" -> {
                     msgFromFriend();
                     updateDriverInfo();
-                    break;
+                }
             }
         }
     }
@@ -376,29 +436,43 @@ public class InterfaceDriver extends Thread {
             System.out.println("\n " +
                     " Grupos" +
                     "\n 0 - Sair" +
-                    "\n 1 - Adicionar um grupo" +
-                    "\n 2 - Remover um grupo" +
+                    "\n 1 - Adicionar grupo" +
+                    "\n 2 - Remover grupo" +
+                    "\n 3 - Criar grupo" +
                     "");
 
             input = scanner.nextLine();
 
             switch (input) {
-                case "0":
+                case "0" -> {
                     goOn = false;
-                    break;
-                case "1":
+                    updateDriverInfo();
+                }
+                case "1" -> {
                     addGroup();
                     updateDriverInfo();
-                    break;
-                case "2":
+                }
+                case "2" -> {
                     removeGroup();
                     updateDriverInfo();
-                    break;
-                case "3":
+                }
+                case "3" -> {
+                    createGroup();
                     updateDriverInfo();
-                    break;
+                }
             }
         }
+    }
+
+    public void createGroup(){
+        System.out.println("Introduza o nome do grupo");
+        String name = scanner.nextLine();
+
+        Group group = new Group(name);
+
+        Request r = new Request(Variables.GROUP_CREATE, gson.toJson(group));
+
+        out.println(gson.toJson(r));
     }
 
 
@@ -494,11 +568,11 @@ public class InterfaceDriver extends Thread {
         System.out.println("Introduza a mensagem para a comunidade: ");
         String msg = this.driver.getUsername() + " : " + scanner.nextLine();
         DatagramPacket packetGroupMulticast = new DatagramPacket(msg.getBytes(),
-                msg.getBytes().length, this.addressBroadcast, Variables.PORT_BROADCAST);
+                msg.getBytes().length, this.addressBroadcast, Variables.PORT_MULTICAST);
         this.socketBroadcast.send(packetGroupMulticast);
     }
 
-    public void msgToComunity() throws IOException {
+    public void msgToComunity() {
         System.out.println("Introduza a mensagem para a comunidade: ");
         String msg = scanner.nextLine();
 
@@ -511,13 +585,13 @@ public class InterfaceDriver extends Thread {
     public void friends() {
         System.out.println("Lista de amigos:");
 
-        for (Driver d:this.driver.getFriends()) {
-            System.out.println("- " + d.getUsername());
+        for (String username:this.driver.getFriends()) {
+            System.out.println("- " + username);
         }
 
-        System.out.println(" 0 - Voltar" +
-                " 1 - Adicionar amigo" +
-                " 2 - Remover amigo");
+        System.out.println("\n 0 - Voltar" +
+                "\n 1 - Adicionar amigo" +
+                "\n 2 - Remover amigo");
 
         input = scanner.nextLine();
         switch (input) {
@@ -553,21 +627,37 @@ public class InterfaceDriver extends Thread {
         boolean back = false;
         while (!back) {
             System.out.println("A sua localização atual é: " + this.driver.getCurrentLocation());
-            System.out.println("-------------" +
+            System.out.println("\n" +
+                    "\n 0 - Voltar" +
                     "\n 1 - Nova localização" +
-                    "\n 0 - Voltar");
+                    "\n 2 - Definir raio circudante" +
+                    "\n ");
             input = scanner.nextLine();
             switch (input) {
                 case "0":
                     back = true;
+                    updateDriverInfo();
                     break;
                 case "1":
                     newLocation();
+                    updateDriverInfo();
                     break;
+                case "2":
+                    updateRadius();
+                    updateDriverInfo();
                 default:
                     break;
             }
         }
+    }
+
+    public void updateRadius(){
+        System.out.println("Introduza o raio:");
+        String radius = scanner.nextLine();
+
+        Request r = new Request(Variables.AREA_CIRCUNDANTE, radius);
+
+        this.out.println(gson.toJson(r));
     }
 
     public void newLocation() {
@@ -577,9 +667,7 @@ public class InterfaceDriver extends Thread {
         String longit = scanner.nextLine();
 
         Location l = new Location(Double.parseDouble(latit), Double.parseDouble(longit));
-        Request r = new Request(Variables.NEW_LOCATION, gson.toJson(l));
-
-        this.driver.setCurrentLocation(l);
+        Request r = new Request(Variables.LOCATION, gson.toJson(l));
 
         out.println(gson.toJson(r));
     }

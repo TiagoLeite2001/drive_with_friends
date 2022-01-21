@@ -2,37 +2,36 @@ package classes;
 
 import com.google.gson.Gson;
 import helpers.*;
-import others.Group;
 
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 
-public class DriverHandler extends Thread {
+public class UserHandler extends Thread {
 
-    static ArrayList<DriverHandler> driverHandlersList = new ArrayList<>();
+    static ArrayList<UserHandler> driverHandlersList = new ArrayList<>();
 
-    private Socket socketDriver;
+    private Socket socketUser;
     private BufferedReader in;
     private PrintWriter out;
 
     private MulticastSocket socketBroadcast;
 
-    private Driver driver = null;
+    private Driver driver;
 
     private Gson gson;
     private String request;
 
     private SharedObject sharedObject;
 
-    public DriverHandler(Socket socketClient, MulticastSocket socketBroadcast, SharedObject sharedObject) throws IOException {
+    public UserHandler(Socket socketUser, MulticastSocket socketBroadcast, SharedObject sharedObject) throws IOException {
         driverHandlersList.add(this);
-        this.socketDriver = socketClient;
-        this.out = new PrintWriter(socketDriver.getOutputStream(), true);
-        this.in = new BufferedReader(new InputStreamReader(socketDriver.getInputStream()));
+        this.socketUser = socketUser;
+        this.out = new PrintWriter(this.socketUser.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(this.socketUser.getInputStream()));
         this.socketBroadcast = socketBroadcast;
+        this.driver = null;
         this.gson = new Gson();
-
         this.sharedObject = sharedObject;
     }
 
@@ -68,24 +67,12 @@ public class DriverHandler extends Thread {
 
         //User is logged in
         //Send user info
-        Gson gson = new Gson();
         String driver = gson.toJson(this.driver);
 
         out.println(driver);
 
-        /**
-         //Ligar multicast das areas de alertas do utilizador
-         if (!this.driver.getAlertsLocations().isEmpty()) {
-         for (Object o : this.driver.getAlertsLocations()) {
-         MulticastSocket ms = (MulticastSocket) o;
-         Thread msThread = new Thread(new ThreadMulticast(ms));
-         msThread.start();
-         }
-         }
-         */
-
         try {
-            while (socketDriver.isConnected()) {
+            while (socketUser.isConnected()) {
                 String srequest = in.readLine();
 
                 Request r = gson.fromJson(srequest, Request.class);
@@ -98,13 +85,10 @@ public class DriverHandler extends Thread {
                         location(gson.fromJson(r.msg, Location.class));
                         break;
                     case (Variables.AREA_ALERTS):
-                        areaAlerts(gson.fromJson(r.msg, AreaAlert.class));
+                        addAreaAlert(r.msg);
                         break;
                     case (Variables.AREA_CIRCUNDANTE):
-                        areaCircundante(gson.fromJson(r.msg, AreaCircundante.class));
-                        break;
-                    case (Variables.ALL_USERS):
-                        sendAllUsers();
+                        areaCircundante(Double.parseDouble(r.msg));
                         break;
                     case (Variables.GROUP_JOIN):
                         joinGroup(gson.fromJson(r.msg, Group.class));
@@ -119,13 +103,13 @@ public class DriverHandler extends Thread {
                         addFriend(gson.fromJson(r.msg, AddFriend.class));
                         break;
                     case (Variables.MSG_TO_COMUNITY):
-                        //msgToComunity(gson.fromJson(r.msg, MsgToComunity.class));
+                        msgToComunity(gson.fromJson(r.msg, MsgToComunity.class));
                         break;
                     case (Variables.MSG_TO_GROUP):
                         msgToGroup(gson.fromJson(r.msg, Message.class));
                         break;
                     case (Variables.MSG_TO_FRIEND):
-                        msgToUser(gson.fromJson(r.msg, Message.class));
+                        msgToFriend(gson.fromJson(r.msg, Message.class));
                         break;
                     case (Variables.SHARED):
                         sendSharedObject();
@@ -135,6 +119,10 @@ public class DriverHandler extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void addAreaAlert(String l) {
+        this.driver.addAlertLocation(l);
     }
 
     private void msgToGroup(Message m) throws IOException {
@@ -201,7 +189,7 @@ public class DriverHandler extends Thread {
         if (g != null) {
             if (!this.driver.containsGroup(g)) {
                 this.driver.addGroup(g);
-                this.socketBroadcast.joinGroup(g.getIp());
+                //this.socketBroadcast.joinGroup(g.getIp());
                 Request r = new Request(Variables.GROUP_JOIN, g.getIpS());
                 out.println(gson.toJson(r));
             } else {
@@ -243,10 +231,17 @@ public class DriverHandler extends Thread {
 
     public void createGroup(Group group) throws UnknownHostException {
         if (!existsGroup(group)) {
-            InetAddress ip = InetAddress.getByName(Variables.IP_MULTICAST_COMUNITY + Variables.IP_MULTICAST_COMUNITY_VALUE++);
-            Group g = new Group(ip, group.getName());
+            String ip = SharedObject.IP_MULTICAST_COMUNITY + SharedObject.IP_MULTICAST_COMUNITY_LAST_VALUE++;
+            InetAddress ipn = InetAddress.getByName(ip);
+            Group g = new Group(ipn, group.getName());
 
             this.sharedObject.addGroup(g);
+
+            Request r = new Request(Variables.RESPONSE, "Grupo criado com sucesso");
+            out.println(gson.toJson(r));
+        }else {
+            Request r = new Request(Variables.RESPONSE, "Grupo com o mesmo nome já existe");
+            out.println(gson.toJson(r));
         }
     }
 
@@ -270,57 +265,82 @@ public class DriverHandler extends Thread {
         return null;
     }
 
-    public void msgToEveryone(MsgToComunity mtc) throws IOException {
-        DatagramPacket packetGroupMulticast = new DatagramPacket(mtc.msg.getBytes(), mtc.msg.getBytes().length,
-                InetAddress.getByName(Variables.IP_BROADCAST), Variables.PORT_BROADCAST);
-        this.socketBroadcast.send(packetGroupMulticast);
+    public void msgToComunity(MsgToComunity mtc) throws IOException {
+        String ip = SharedObject.IP_MULTICAST_COMUNITY + SharedObject.IP_MULTICAST_COMUNITY_LAST_VALUE++;
+        InetAddress address = InetAddress.getByName(ip);
+
+        for (UserHandler sdh : driverHandlersList) {
+            if (!(sdh.driver == null) && !(sdh.driver.getUsername().equals(this.driver.getUsername())) && (sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1)) {
+                System.out.println("km: " + sdh.driver.getCurrentLocation().distanceTo(mtc.location));
+
+                Request r = new Request(Variables.GROUP_JOIN_COMMUNITY, ip);
+                sdh.out.println(gson.toJson(r));
+            }
+        }
+
+        String data = gson.toJson(mtc);
+        DatagramPacket packetGroupMulticastCommunity = new DatagramPacket(data.getBytes(), data.getBytes().length,
+                address, Variables.PORT_MULTICAST);
+
+        this.socketBroadcast.send(packetGroupMulticastCommunity);
     }
 
-    /**
-     * public void msgToComunity(MsgToComunity mtc) throws IOException {
-     * int port = Variables.PORT_MULTICAST_COMUNITY++;
-     * MulticastSocket socketMulticastComunity = new MulticastSocket(port);
-     * InetAddress groupAdressComunity = InetAddress.getByName(Variables.IP_MULTICAST_COMUNITY + Variables.IP_MULTICAST_COMUNITY_VALUE++);
-     * <p>
-     * for (DriverHandler sdh : driverHandlersList) {
-     * if (!(sdh.driver == null) && !(sdh.driver.getUsername().equals(this.driver.getUsername())) && (sdh.driver.getCurrentLocation().distanceTo(mtc.location) <= 1)) {
-     * System.out.println("km: " + sdh.driver.getCurrentLocation().distanceTo(mtc.location));
-     * sdh.socketMulticastComunity = socketMulticastComunity;
-     * sdh.socketMulticastComunity.joinGroup(groupAdressComunity);
-     * sdh.starThreadMulticastComunity();
-     * Thread threadBroadCastComunity = new Thread(new ThreadMulticast(sdh.socketMulticastComunity));
-     * threadBroadCastComunity.start();
-     * }
-     * }
-     * <p>
-     * String data = gson.toJson(mtc);
-     * <p>
-     * DatagramPacket packetGroupMulticastComunity = new DatagramPacket(data.getBytes(),
-     * data.getBytes().length, groupAdressComunity, port);
-     * <p>
-     * this.socketMulticastComunity.send(packetGroupMulticastComunity);
-     * }
-     */
 
+    public void msgToFriend(Message m) throws IOException {
+        boolean found = false;
+        for (UserHandler sdh : driverHandlersList) {
 
-    public void msgToUser(Message m) throws IOException {
-        for (DriverHandler sdh : driverHandlersList) {
-            if (sdh.driver != null){
+            if (sdh.driver != null) {
                 if (sdh.driver.getUsername().equals(m.to)) {
+                    found = true;
+                    if (sdh.driver.getFriends().contains(this.driver.getUsername())) {
+                        sdh.driver.addMsg(m.from, m.msg);
 
-                    sdh.driver.addMsg(m.from, m.msg);
+                        Request r = new Request(Variables.MSG_FROM_FRIEND, gson.toJson(m));
+                        sdh.out.println(gson.toJson(r));
 
-                    Request r = new Request(Variables.MSG_FROM_FRIEND, gson.toJson(m));
-                    sdh.out.println(gson.toJson(r));
+                        r = new Request(Variables.RESPONSE, "Mensagem enviada");
+                        out.println(gson.toJson(r));
+                        break;
+                    } else {
+                        Request r = new Request(Variables.RESPONSE, gson.toJson("O utilizador não o tem como amigo!"));
+                        out.println(gson.toJson(r));
+                        break;
+                    }
                 }
             }
         }
+
+        if (!found) {
+            //Se o utilizador não está online
+            for (Driver driver : sharedObject.getDrivers()) {
+                if (driver != null) {
+                    if (driver.getUsername().equals(m.to)) {
+                        found = true;
+                        if (driver.getFriends().contains(this.driver)) {
+                            driver.addMsg(m.from, m.msg);
+                            Request r = new Request(Variables.RESPONSE, gson.toJson("Mensagem enviada"));
+                            out.println(gson.toJson(r));
+                            break;
+                        } else {
+                            Request r = new Request(Variables.RESPONSE, gson.toJson("O utilizador não o tem como amigo!"));
+                            out.println(gson.toJson(r));
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (!found) {
+            Request r = new Request(Variables.RESPONSE, gson.toJson("O utilizador não encontrado!"));
+            out.println(gson.toJson(r));
+        }
     }
 
-    public void areaCircundante(AreaCircundante ac) {
-        this.driver.setRadius(ac.radius);
+    public void areaCircundante(Double radius) {
+        this.driver.setRadius(radius);
 
-        Request r = new Request(Variables.RESPONSE, "Raio da área circundante alterada com sucesso!");
+        Request r = new Request(Variables.RESPONSE, "Raio da área circundante alterado com sucesso!");
         this.out.println(r);
     }
 
@@ -328,48 +348,7 @@ public class DriverHandler extends Thread {
         this.driver.setCurrentLocation(location);
 
         Request r = new Request(Variables.RESPONSE, "Localização alterada com sucesso!");
-        this.out.println(r);
-    }
-
-    public void areaAlerts(AreaAlert al) {
-        try {
-            String area = al.local;
-            switch (area) {
-                case ("NORTH"):
-                    MulticastSocket socketBroadcastNorth = new MulticastSocket(Variables.PORT_MULTICAST_NORTE);
-                    InetAddress groupAdressNorte = InetAddress.getByName(Variables.IP_MULTICAST_NORTE);
-                    socketBroadcastNorth.joinGroup(groupAdressNorte);
-                    Thread threadBroadCastNorth = new Thread(new ThreadMulticast(socketBroadcastNorth));
-                    threadBroadCastNorth.start();
-
-                case ("CENTER"):
-                    MulticastSocket socketBroadcastCenter = new MulticastSocket(Variables.PORT_MULTICAST_CENTRO);
-                    InetAddress groupAdressCenter = InetAddress.getByName(Variables.IP_MULTICAST_CENTRO);
-                    socketBroadcastCenter.joinGroup(groupAdressCenter);
-                    Thread threadBroadCastCenter = new Thread(new ThreadMulticast(socketBroadcastCenter));
-                    threadBroadCastCenter.start();
-
-                case ("SOUTH"):
-                    MulticastSocket socketBroadcastSouth = new MulticastSocket(Variables.PORT_MULTICAST_SUL);
-                    InetAddress groupAdressSouth = InetAddress.getByName(Variables.IP_MULTICAST_SUL);
-                    socketBroadcastSouth.joinGroup(groupAdressSouth);
-                    Thread threadBroadCastSouth = new Thread(new ThreadMulticast(socketBroadcastSouth));
-                    threadBroadCastSouth.start();
-
-            }
-        } catch (Exception e) {
-            out.println(Variables.ERROR);
-        }
-    }
-
-    public void sendAllUsers() {
-        if (!this.sharedObject.getDrivers().isEmpty()) {
-            for (Object c : this.sharedObject.getDrivers()) {
-                Driver driver = (Driver) c;
-                out.println(driver.getUsername());
-            }
-        }
-        out.println(Variables.DONE);
+        this.out.println(gson.toJson(r));
     }
 
     public void addFriend(AddFriend ad) throws IOException {
@@ -380,13 +359,13 @@ public class DriverHandler extends Thread {
             if (driver.getUsername().equals(username)) {
                 found = true;
                 if (!this.driver.getFriends().contains(driver)) {
-                    this.driver.addFriend(driver);
+                    this.driver.addFriend(driver.getUsername());
 
                     Request r = new Request(Variables.RESPONSE, "Amigo adiconado");
                     out.println(gson.toJson(r));
                     break;
 
-                }else {
+                } else {
                     Request r = new Request(Variables.RESPONSE, "O utilizador já se encontra nos seus amigos");
                     out.println(gson.toJson(r));
                 }
@@ -407,8 +386,8 @@ public class DriverHandler extends Thread {
             if (this.out != null) {
                 this.out.close();
             }
-            if (this.socketDriver != null) {
-                this.socketDriver.close();
+            if (this.socketUser != null) {
+                this.socketUser.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
